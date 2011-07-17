@@ -1,9 +1,15 @@
 #!/bin/sh
 
-WORKDIR=`pwd`/system
-TARGETDIR=`(cd .. && pwd)`/priv
+if [ `basename $PWD` != "c_src" ]; then
+    pushd c_src
+fi
 
-DB_VER="4.7.25"
+BASEDIR="$PWD"
+
+WORKDIR=$BASEDIR/system
+TARGETDIR=$BASEDIR/../priv
+
+DB_VER="5.1.25"
 
 ## Check for necessary tarball
 if [ ! -f "db-${DB_VER}.tar.gz" ]; then

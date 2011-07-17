@@ -9,3 +9,4 @@ int_test/test.cover
 bdberl-*
 priv/mibs
 c_src/db-*.tar.gz
+.eunit

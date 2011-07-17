@@ -182,6 +182,8 @@ open(Name, Type, Opts) ->
     case Type of
         btree -> TypeCode = ?DB_TYPE_BTREE;
         hash  -> TypeCode = ?DB_TYPE_HASH;
+        recno  -> TypeCode = ?DB_TYPE_RECNO;
+        queue  -> TypeCode = ?DB_TYPE_QUEUE;
         unknown -> TypeCode = ?DB_TYPE_UNKNOWN %% BDB automatically determines if file exists
     end,
     Flags = process_flags(lists:umerge(Opts, [auto_commit, threaded])),
