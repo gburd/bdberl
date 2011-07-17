@@ -26,7 +26,7 @@
 
 -compile(export_all).
 
--include_lib("ct.hrl").
+-include_lib("common_test/include/ct.hrl").
 
 all() ->
     [open_should_create_database_if_none_exists,
@@ -65,9 +65,11 @@ all() ->
 
 
 dbconfig(Config) ->
-    Cfg = [{set_data_dir, ?config(priv_dir, Config)},
+    Cfg = [
+           {set_data_dir, ?config(priv_dir, Config)},
            {set_flags, 'DB_TXN_NOSYNC'},
-           {set_log_config, 'DB_LOG_IN_MEMORY'}],
+           {log_set_config, 'DB_LOG_IN_MEMORY'}
+          ],
     list_to_binary(lists:flatten([io_lib:format("~s ~s\n", [K,V]) || {K, V} <- Cfg])).
 
 
