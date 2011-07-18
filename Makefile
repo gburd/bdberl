@@ -4,15 +4,16 @@ BDB_LOCAL_DIST=c_src/$(BDB_DIST)
 BDB_LOCAL_LIB=c_src/system/lib/libdb.a
 BDB_DIST_URL=http://download.oracle.com/berkeley-db/$(BDB_DIST)
 
-ERL = erl
-REBAR = ./rebar
+ERL=erl
+ERL_FLAGS=+A10
+REBAR=./rebar
 REBAR_FLAGS=
 
 all: $(BDB_LOCAL_LIB)
-	$(REBAR) $(REBAR_FLAGS) compile eunit ct
+	ERL_FLAGS=$(ERL_FLAGS) $(REBAR) $(REBAR_FLAGS) compile eunit ct
 
 $(BDB_LOCAL_DIST):
-	$(ERL) -noshell -s inets -eval 'httpc:request(get, {"$(BDB_DIST_URL)", []}, [], [{stream, "$(BDB_LOCAL_DIST)"}])' -s init stop
+	ERL_FLAGS=$(ERL_FLAGS) $(ERL) -noshell -s inets -eval 'httpc:request(get, {"$(BDB_DIST_URL)", []}, [], [{stream, "$(BDB_LOCAL_DIST)"}])' -s init stop
 
 $(BDB_LOCAL_LIB): $(BDB_LOCAL_DIST)
 	c_src/buildlib.sh
