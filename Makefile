@@ -19,6 +19,7 @@ $(BDB_LOCAL_LIB): $(BDB_LOCAL_DIST)
 	c_src/buildlib.sh
 clean: 
 	$(REBAR) $(REBAR_FLAGS) clean
+	-rm test/*.beam
 
 distclean: clean
 	-rm -rf $(BDB_LOCAL_DIST)
