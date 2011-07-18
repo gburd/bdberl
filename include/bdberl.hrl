@@ -88,6 +88,7 @@
 -define(ERROR_DB_ACTIVE,     -29007).           % Database is currently active; operation requires otherwise
 -define(ERROR_INVALID_CMD,   -29008).           % Invalid command
 -define(ERROR_INVALID_DB_TYPE,-29009).           % Invalid database type
+-define(ERROR_INVALID_VALUE, -29010).           % Invalid CRC-32 on value
 
 %% DB (user visible) error return codes.
 -define(DB_BUFFER_SMALL,           -30999).      % User memory too small for return.
