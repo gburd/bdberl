@@ -24,3 +24,4 @@ distclean: clean
 	-rm -rf $(BDB_LOCAL_DIST)
 	-rm -rf c_src/sources 
 	-rm -rf priv
+	-rm -rf logs
