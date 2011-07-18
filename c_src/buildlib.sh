@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ `basename $PWD` != "c_src" ]; then
     pushd c_src
