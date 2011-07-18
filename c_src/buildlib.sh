@@ -27,7 +27,7 @@ rm -rf system db-${DB_VER}
 tar -xzf db-${DB_VER}.tar.gz && \
 ##(cd db-${DB_VER} && patch -p0 < ../bdb-align.patch )  && \
 (cd db-${DB_VER}/build_unix && \
-    ../dist/configure --prefix=$WORKDIR --enable-diagnostic --enable-debug --disable-shared --enable-perfmon-statistics --enable-dtrace && make && ranlib libdb-*.a && make install) && \
+    ../dist/configure --prefix=$WORKDIR --disable-shared && make && ranlib libdb-*.a && make install) && \
     rm -rf db-${DB_VER}
 
 
