@@ -1,10 +1,13 @@
 all: compile
 
 compile:
-	@ ./rebar compile
+	@ $(REBAR) compile
 
 tests:
-	@ ./rebar eunit
+	@ $(REBAR) ct
 
 clean:
-	@ ./rebar clean
+	@ $(REBAR) clean
+	@ rm -rf ./logs
+
+include rebar.mk
