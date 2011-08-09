@@ -1,10 +1,14 @@
 /* -------------------------------------------------------------------
  *
  * bdberl: Berkeley DB Driver for Erlang - Stats
+ *
  * Copyright (c) 2008-9 The Hive http://www.thehive.com/
  * Authors: Dave "dizzyd" Smith <dizzyd@dizzyd.com>
  *          Phil Toland <phil.toland@gmail.com>
  *          Jon Meredith <jon@jonmeredith.com>
+ *
+ * Copyright (c) 2011 Basho Technologies http://www.basho.com/
+ * Authors: Greg Burd <greg@basho.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

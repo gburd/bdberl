@@ -1,7 +1,16 @@
 %% -------------------------------------------------------------------
 %%
 %% bdberl: DB API Tests
-%% Copyright (c) 2008 The Hive.  All rights reserved.
+%%
+%% @copyright 2008-9 The Hive http://www.thehive.com/
+%% @author Dave "dizzyd" Smith <dizzyd@dizzyd.com>
+%% @author Phil Toland <phil.toland@gmail.com>
+%% @author Jon Meredith <jon@jonmeredith.com>
+%% @end
+%%
+%% @copyright 2011 Basho Technologies http://www.basho.com/
+%% @author Greg Burd <greg@basho.com>
+%% @end
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +35,7 @@
 
 -compile(export_all).
 
--include_lib("ct.hrl").
+-include_lib("common_test/include/ct.hrl").
 
 all() ->
     [open_should_create_database_if_none_exists,

@@ -29,7 +29,7 @@
 #define _BDBERL_DRV
 
 #include "erl_driver.h"
-#include "db.h"
+#include <db.h>
 #include "bdberl_tpool.h"
 #include "bdberl_crc32.h"
 #include "bin_helper.h"

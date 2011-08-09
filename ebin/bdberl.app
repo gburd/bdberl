@@ -1,9 +1,7 @@
-{application, bdberl,
- [{description, "Berkeley DB Erlang Driver"},
-  {vsn, "12"},
-  {modules, [ bdberl, bdberl_logger ]},
-  {registered, []},
-  {applications, [kernel, 
-                  stdlib]},
-  {env, []}
-]}.
+{application,bdberl,
+             [{description,"This is an Erlang port driver that allows Erlang programs to store data in BerkleyDB."},
+              {vsn,"5.1.28"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {env,[]},
+              {modules,[bdberl,bdberl_logger]}]}.

@@ -1,0 +1,37 @@
+--- db-5.2.28/dist/Makefile.in.orig	2011-08-08 11:12:17.000000000 -0400
++++ db-5.2.28/dist/Makefile.in	2011-08-08 11:13:04.000000000 -0400
+@@ -1066,9 +1066,9 @@
+ # Library and standard utilities install.
+ ##################################################
+ library_install: install_setup
+-library_install: install_include install_lib install_utilities install_docs
++library_install: install_include install_lib install_utilities
+ 
+-uninstall: uninstall_include uninstall_lib uninstall_utilities uninstall_docs
++uninstall: uninstall_include uninstall_lib uninstall_utilities
+ 
+ install_setup:
+ 	@test -d $(DESTDIR)$(prefix) || \
+@@ -1144,22 +1144,6 @@
+ 		$(RM) $$i; \
+ 	done)
+ 
+-# We install csharp docs even on UNIX so we don't have a 
+-# broken link on the landing page.
+-DOCLIST=api_reference articles bdb-sql collections csharp \
+-	gsg gsg_db_rep gsg_txn index.html installation java \
+-	license porting programmer_reference upgrading
+-
+-install_docs:
+-	@echo "Installing documentation: $(DESTDIR)$(docdir) ..."
+-	@test -d $(DESTDIR)$(docdir) || \
+-	    ($(MKDIR) -p $(DESTDIR)$(docdir) && \
+-	    $(CHMOD) $(dmode) $(DESTDIR)$(docdir))
+-	@cd $(DESTDIR)$(docdir) && $(RM) -r $(DOCLIST)
+-	@cd $(topdir)/docs && $(CP) -pr $(DOCLIST) $(DESTDIR)$(docdir)/
+-
+-uninstall_docs:
+-	@cd $(DESTDIR)$(docdir) && $(RM) -r $(DOCLIST)
+ 
+ ##################################################
+ # Remaining standard Makefile targets.

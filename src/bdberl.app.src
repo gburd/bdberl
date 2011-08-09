@@ -2,6 +2,10 @@
  [
   {description, "This is an Erlang port driver that allows Erlang programs to store data in BerkleyDB."},
   {vsn, "5.1.28"},
-  {applications, [kernel, stdlib]}
- ]
-}.
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.

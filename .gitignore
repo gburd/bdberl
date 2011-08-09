@@ -1,11 +1,16 @@
+*~
+\#*#
+.\#*
 *.o
 *.so
 *.beam
-c_src/system
 logs
 doc
 test/test.cover
 int_test/test.cover
+.eunit
 bdberl-*
 priv/mibs
+c_src/system
+c_src/db-*
 c_src/db-*.tar.gz
