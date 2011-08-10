@@ -45,6 +45,7 @@ all() ->
      get_should_return_a_value_when_getting_a_valid_record,
      put_should_succeed_with_manual_transaction,
      put_should_rollback_with_failed_manual_transaction,
+%     del_should_remove_a_value,
      transaction_should_commit_on_success,
      transaction_should_abort_on_exception,
      transaction_should_abort_on_user_abort,
@@ -129,6 +130,13 @@ put_should_rollback_with_failed_manual_transaction(Config) ->
     ok = bdberl:txn_begin(),
     ok = bdberl:put(Db, mykey, avalue),
     ok = bdberl:txn_abort(),
+    not_found = bdberl:get(Db, mykey).
+
+del_should_remove_a_value(Config) ->
+    Db = ?config(db, Config),
+    ok = bdberl:put(Db, mykey, avalue),
+    {ok, avalue} = bdberl:get(Db, mykey),
+    ok = bdberl:del(Db, mykey),
     not_found = bdberl:get(Db, mykey).
 
 transaction_should_commit_on_success(Config) ->

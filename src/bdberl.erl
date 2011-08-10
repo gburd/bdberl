@@ -63,6 +63,7 @@
          get/2, get/3,
          get_r/2, get_r/3,
          update/3, update/4, update/5, update/6, update/7,
+	 del/2,
          truncate/0, truncate/1,
          delete_database/1,
          cursor_open/1, cursor_next/0, cursor_prev/0, cursor_current/0, cursor_close/0,
@@ -955,6 +956,47 @@ get_r(Db, Key, Opts) ->
         {ok, Value} -> {ok, Value};
         not_found   -> not_found;
         Error       -> throw(Error)
+    end.
+
+
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Delete a value based on key.
+%%
+%% This function removes key/data pairs from the database.  The key/data
+%% pair associated with the specified key is discarded from the database.
+%% In the presence of duplicate key values, all records associated with
+%% the designated key will be discarded.
+%%
+%% This function will return `not_found' if the specified key is not in
+%% the database.
+%%
+%% @spec del(Db, Key) -> not_found | {ok, Value} | {error, Error}
+%% where
+%%    Db = integer()
+%%    Key = term()
+%%
+%% @equiv del(Db, Key, [])
+%% @end
+%%--------------------------------------------------------------------
+-spec del(Db :: db(), Key :: db_key()) ->
+    not_found | ok | db_error().
+
+del(Db, Key) ->
+    {KeyLen, KeyBin} = to_binary(Key),
+    Cmd = <<Db:32/signed-native, 0:32/native, KeyLen:32/native, KeyBin/bytes>>,
+    <<Result:32/signed-native>> = erlang:port_control(get_port(), ?CMD_DEL, Cmd),
+    case decode_rc(Result) of
+        ok ->
+            receive
+                {ok, _, _} -> ok;
+                not_found -> not_found;
+                {error, Reason} -> {error, Reason}
+            end;
+        Error ->
+            {error, Error}
     end.
 
 

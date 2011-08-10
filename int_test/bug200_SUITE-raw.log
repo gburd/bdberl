@@ -1,0 +1,134 @@
+--- Test run on 2011/08/10 17:16:52 ---
+
+
+
+Common Test v1.5.4 starting (cwd is /Users/gburd/Projects/bdberl)
+
+
+Common Test: Running make in test directories...
+Including the following directories:
+"/Users/gburd/Projects/bdberl/include"
+
+CWD set to: "/Users/gburd/Projects/bdberl/logs/ct_run.test@tautog.local.2011-08-10_17.16.52"
+
+TEST INFO: 1 test(s), 1 case(s) in 1 suite(s)
+
+Cover compiling 2 modules - this may take some time... done
+
+Testing Projects.bdberl: Starting test, 1 test cases
+DRIVER INIT
+db_env_create(0x1994bb30, 0) = 0
+G_DB_ENV->open(0x1994bb30, 0, 00042517, 0) = 0
+Using "BDBERL_DEADLOCK_CHECK_INTERVAL" value 1
+Using "BDBERL_NUM_GENERAL_THREADS" value 10
+Using "BDBERL_NUM_TXN_THREADS" value 10
+threadid 0x7f9c31934048 port 0x1ad: BDB DRIVER STARTING
+threadid 0x7f9c31934048 port 0x1ad: BDB DRIVER STARTED
+threadid 0x7f9c31959b80 port 0x1ae: BDB DRIVER STARTING
+threadid 0x7f9c31959b80 port 0x1ae: BDB DRIVER STARTED
+
+=ERROR REPORT==== 10-Aug-2011::17:16:52 ===
+SNMP is not running; bdberl stats will not be published.
+----------------------------------------------------
+2011-08-10 17:16:52.616
+Driver running with:
+{ok,[{databases_size,1024},
+     {deadlock_interval,1},
+     {trickle_interval,300},
+     {trickle_percentage,50},
+     {checkpoint_interval,60},
+     {num_general_threads,10},
+     {num_txn_threads,10},
+     {general_jobs_pending,0},
+     {general_jobs_active,0},
+     {txn_jobs_pending,0},
+     {txn_jobs_active,0}]}
+
+
+threadid 0x7f9c31942a30 port 0x1f2: BDB DRIVER STARTING
+threadid 0x7f9c31942a30 port 0x1f2: BDB DRIVER STARTED
+threadid 0x7f9c31942a30 port 0x1f2: locking G_DATABASES
+threadid 0x7f9c31942a30 port 0x1f2: locked G_DATABASES
+threadid 0x7f9c31963230 port 0x1f3: BDB DRIVER STARTING
+threadid 0x7f9c31942a30 port 0x1f2: db_create(&db, 0x7f9c35000000, 0);
+threadid 0x7f9c31934048 port 0x1f4: BDB DRIVER STARTING
+threadid 0x7f9c31963230 port 0x1f3: BDB DRIVER STARTED
+threadid 0x7f9c3195b030 port 0x1f5: BDB DRIVER STARTING
+threadid 0x7f9c31942a30 port 0x1f2: rc = ok (0) db = 0x7f9c33000600
+threadid 0x7f9c31934048 port 0x1f4: BDB DRIVER STARTED
+threadid 0x7f9c31963230 port 0x1f3: locking G_DATABASES
+threadid 0x7f9c3195b030 port 0x1f5: BDB DRIVER STARTED
+threadid 0x7f9c31942a30 port 0x1f2: db->open(0x7f9c33000600, 0, 'bug200_13.bdb', 0, 1, 00000315, 0);
+threadid 0x7f9c31934048 port 0x1f4: locking G_DATABASES
+threadid 0x7f9c3195b030 port 0x1f5: locking G_DATABASES
+threadid 0x7f9c31942a30 port 0x1f2: rc = ok (0)
+threadid 0x7f9c31942a30 port 0x1f2: unlocking G_DATABASES
+threadid 0x7f9c31942a30 port 0x1f2: unlocked G_DATABASES
+Adding dbref 0 to port 0x1f2
+threadid 0x7f9c31963230 port 0x1f3: locked G_DATABASES
+Adding dbref 0 to port 0x1f3
+Adding port 0x1f3 to dbref 0
+threadid 0x7f9c31963230 port 0x1f3: unlocking G_DATABASES
+threadid 0x7f9c31963230 port 0x1f3: unlocked G_DATABASES
+threadid 0x7f9c31934048 port 0x1f4: locked G_DATABASES
+Adding dbref 0 to port 0x1f4
+Adding port 0x1f4 to dbref 0
+threadid 0x7f9c31934048 port 0x1f4: unlocking G_DATABASES
+threadid 0x7f9c31934048 port 0x1f4: unlocked G_DATABASES
+threadid 0x7f9c3195b030 port 0x1f5: locked G_DATABASES
+Adding dbref 0 to port 0x1f5
+Adding port 0x1f5 to dbref 0
+threadid 0x7f9c3195b030 port 0x1f5: unlocking G_DATABASES
+threadid 0x7f9c3195b030 port 0x1f5: unlocked G_DATABASES
+----------------------------------------------------
+2011-08-10 17:16:52.631
+----------------------------------------------------
+2011-08-10 17:16:52.631
+----------------------------------------------------
+2011-08-10 17:16:52.631
+<0.74.0> starting for 250 requests
+<0.73.0> starting for 250 requests
+----------------------------------------------------
+2011-08-10 17:16:52.631
+<0.71.0> starting for 250 requests
+
+
+
+
+<0.72.0> starting for 250 requests
+
+
+
+
+----------------------------------------------------
+2011-08-10 17:16:52.631
+----------------------------------------------------
+2011-08-10 17:16:52.631
+----------------------------------------------------
+2011-08-10 17:16:52.631
+----------------------------------------------------
+2011-08-10 17:16:52.631
+Pid <0.74.0> count 250
+Pid <0.73.0> count 250
+Pid <0.71.0> count 250
+Pid <0.72.0> count 250
+
+
+
+
+
+
+
+
+threadid 0x7f9c319597e0 port 0x1f5: G_DB_ENV->txn_begin(0x7f9c35000000, 0, 0x0, 00000010)
+threadid 0x7f9c319597e0 port 0x1f5: rc = ok (0) d->txn = 0x7f9c31500540
+threadid 0x7f9c319599c0 port 0x1f3: G_DB_ENV->txn_begin(0x7f9c35000000, 0, 0x0, 00000010)
+threadid 0x7f9c319599c0 port 0x1f3: rc = ok (0) d->txn = 0x7f9c329005d0
+threadid 0x7f9c31959a80 port 0x1f4: G_DB_ENV->txn_begin(0x7f9c35000000, 0, 0x0, 00000010)
+threadid 0x7f9c319597e0 port 0x1f2: G_DB_ENV->txn_begin(0x7f9c35000000, 0, 0x0, 00000010)
+threadid 0x7f9c31959a80 port 0x1f4: rc = ok (0) d->txn = 0x7f9c31500690
+threadid 0x7f9c319597e0 port 0x1f2: rc = ok (0) d->txn = 0x7f9c32c00000
+threadid 0x7f9c31959470 port 0x1f5: db->put(0x7f9c33000600, 0x7f9c31500540, 0xb171ae18, 0xb171adf0, 00000000) dbref 0 key=0x7f9c3195c1e4(6) value=0x7f9c3195c1ee(9084)
+threadid 0x7f9c31959470 port 0x1f5: rc = ok (0)
+threadid 0x7f9c31959720 port 0x1f5: d->txn->txn_commit(0x7f9c31500540, 00000000)
+threadid 0x7f9c31959720 port 0x1f5: rc = ok (0)

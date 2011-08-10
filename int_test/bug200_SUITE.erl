@@ -43,7 +43,7 @@ bug200(_Config) ->
     os:putenv("BDBERL_DEADLOCK_CHECK_INTERVAL", "1"),
 
     %% Copy in the DB_CONFIG
-    {ok, _} = file:copy("../../int_test/PROD_DB_CONFIG","DB_CONFIG"),
+    {ok, _} = file:copy("../../int_test/DB_CONFIG","DB_CONFIG"),
     
     crypto:start(),
     Data = crypto:rand_bytes(?DATA_SIZE),

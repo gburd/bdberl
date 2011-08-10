@@ -108,6 +108,7 @@ static void get_info(int target, void* values, BinHelper* bh);
 
 static void do_async_put(void* arg);
 static void do_async_get(void* arg);
+static void do_async_del(void* arg);
 static void do_async_txnop(void* arg);
 static void do_async_cursor_get(void* arg);
 static void do_async_truncate(void* arg);
@@ -187,11 +188,11 @@ static unsigned int G_TRICKLE_PERCENTAGE = 50;          /* Desired % of clean pa
 /**
  * Transaction checkpoint monitor. We run a single thread per VM to flush transaction
  * logs into the backing data store. G_CHECKPOINT_INTERVAL is the time between runs in seconds.
- * TODO The interval should be configurable.
+ * TODO: The checkpoint interval should be configurable.
  */
 static ErlDrvTid    G_CHECKPOINT_THREAD   = 0;
 static unsigned int G_CHECKPOINT_ACTIVE   = 1;
-static unsigned int G_CHECKPOINT_INTERVAL = 60 * 60; /* Seconds between checkpoints */
+static unsigned int G_CHECKPOINT_INTERVAL = 60;         /* Seconds between checkpoints */
 
 /**
  * Pipe to used to wake up the various monitors.  Instead of just sleeping
@@ -214,11 +215,11 @@ static ErlDrvPort     G_LOG_PORT;
  */
 static unsigned int G_PAGE_SIZE = 0;
 
-/** Thread pools
- *
+/**
+ * Thread pools
  */
-static unsigned int G_NUM_GENERAL_THREADS = 10;
-static unsigned int G_NUM_TXN_THREADS = 10;
+static unsigned int G_NUM_GENERAL_THREADS = 16;
+static unsigned int G_NUM_TXN_THREADS = 16;
 static TPool* G_TPOOL_GENERAL = NULL;
 static TPool* G_TPOOL_TXNS    = NULL;
 
@@ -360,7 +361,7 @@ DRIVER_INIT(bdberl_drv)
                               &deadlock_check, 0, 0);
 
         // Use the BDBERL_CHECKPOINT_TIME environment value to determine the
-        // interval between transaction checkpoints. Defaults to 1 hour.
+        // interval between transaction checkpoints. Defaults to 1 minute.
         check_pos_env("BDBERL_CHECKPOINT_TIME", &G_CHECKPOINT_INTERVAL);
 
         // Startup checkpoint thread
@@ -670,6 +671,7 @@ static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
     }
     case CMD_PUT:
     case CMD_GET:
+    case CMD_DEL:
     case CMD_PUT_COMMIT:
     {
         FAIL_IF_ASYNC_PENDING(d, outbuf);
@@ -681,7 +683,7 @@ static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
             RETURN_INT(0, outbuf);
         }
 
-        // Inbuf is: << DbRef:32, Rest/binary>>
+        // Inbuf is: <<DbRef:32, Rest/binary>>
         int dbref = UNPACK_INT(inbuf, 0);
 
         // Make sure this port currently has dbref open -- if it doesn't, error out. Of note,
@@ -705,15 +707,25 @@ static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
             d->async_op = cmd;
             d->async_dbref = dbref;
             TPoolJobFunc fn;
-            if (cmd == CMD_PUT || cmd == CMD_PUT_COMMIT)
-            {
+	    switch(cmd) {
+	    case CMD_PUT: case CMD_PUT_COMMIT:
+	      {
                 fn = &do_async_put;
-            }
-            else 
-            {
-                assert(cmd == CMD_GET);
+	      }
+	      break;
+	    case CMD_DEL:
+	      {
+                fn = &do_async_del;
+	      }
+	      break;
+	    case CMD_GET:
+	      {
                 fn = &do_async_get;
-            }
+	      }
+	      break;
+	    default:
+	      assert(cmd);
+	    }
             bdberl_general_tpool_run(fn, d, 0, &d->async_job);
         
             // Let caller know that the operation is in progress
@@ -1606,6 +1618,38 @@ static void do_async_get(void* arg)
     
     // Finally, clean up value buffer (driver_send_term made a copy)
     free(value.data);
+}
+
+static void do_async_del(void* arg)
+{
+    // Payload is: << DbRef:32, Flags:32, KeyLen:32, Key:KeyLen >>
+    PortData* d = (PortData*)arg;
+    
+    // Get the database object, using the provided ref
+    int dbref = UNPACK_INT(d->work_buffer, 0);
+    DB* db = bdberl_lookup_dbref(dbref);
+    
+    // Extract operation flags
+    unsigned flags = UNPACK_INT(d->work_buffer, 4);
+    
+    // Setup DBTs 
+    DBT key;
+    memset(&key, '\0', sizeof(DBT));
+    
+    // Parse payload into DBT
+    key.size = UNPACK_INT(d->work_buffer, 8);
+    key.data = UNPACK_BLOB(d->work_buffer, 12);
+
+    int rc = db->del(db, d->txn, &key, flags);
+    
+    // Cleanup transaction as necessary
+    if (rc && rc != DB_NOTFOUND && d->txn)
+    {
+        d->txn->abort(d->txn);
+        d->txn = 0;
+    }
+    
+    bdberl_async_cleanup_and_send_rc(d, rc);
 }
 
 static void do_async_txnop(void* arg)
