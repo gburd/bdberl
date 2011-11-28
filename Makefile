@@ -16,10 +16,9 @@ clean:
 	-rm test/*.beam
 
 distclean: clean
-	-rm -rf $(BDB_LOCAL_DIST)
+	-make -C c_src clean
 	-rm -rf c_src/sources
 	-rm -rf priv
 	-rm -rf logs
 
 include rebar.mk
-
