@@ -7,7 +7,8 @@ GUNZIP		?= gunzip
 BDB_VER		:= 5.2.36
 BDB_DIR    	:= $(CURDIR)/db-$(BDB_VER)
 BDB_DIST        := db-$(BDB_VER).tar.gz
-BDB_DIST_URL    := http://download.oracle.com/berkeley-db/$(BDB_DIST)
+#BDB_DIST_URL    := http://download.oracle.com/berkeley-db/$(BDB_DIST)
+BDB_DIST_URL    := https://github.com/downloads/gburd/libdb/$(BDB_DIST)
 
 SYSTEM_DIR 	:= $(CURDIR)/system
 LIB_DIR    	:= $(SYSTEM_DIR)/lib
