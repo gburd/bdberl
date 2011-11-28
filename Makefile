@@ -26,3 +26,5 @@ distclean: clean
 	-rm -rf logs
 
 include rebar.mk
+
+.EXPORT_ALL_VARIABLES:

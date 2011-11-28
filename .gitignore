@@ -7,6 +7,7 @@
 *.orig
 logs
 doc
+include/BDBERL-MIB.hrl
 test/test.cover
 int_test/test.cover
 .eunit
