@@ -129,7 +129,7 @@ static int del_portref(int dbref, ErlDrvPort port);
 static int alloc_dbref();
 static void abort_txn(PortData* d);
 
-static void* zalloc(unsigned int size);
+static void* driver_calloc(unsigned int size);
 
 static void* deadlock_check(void* arg);
 static void* checkpointer(void* arg);
@@ -299,6 +299,9 @@ DRIVER_INIT(bdberl_drv)
     }
     else
     {
+        G_DB_ENV_ERROR = G_DB_ENV->set_alloc(G_DB_ENV, driver_alloc, driver_realloc, driver_free);
+        DBG(" = %d\r\n", G_DB_ENV_ERROR);
+
         DBG("G_DB_ENV->open(%p, 0, %08X, 0)", &G_DB_ENV, flags);
         G_DB_ENV_ERROR = G_DB_ENV->open(G_DB_ENV, 0, flags, 0);
         DBG(" = %d\r\n", G_DB_ENV_ERROR);
@@ -1168,7 +1171,7 @@ static int open_database(const char* name, DBTYPE type, unsigned int flags, Port
         assert(db != NULL);
         G_DATABASES[dbref].db = db;
         G_DATABASES[dbref].name = strdup(name);
-        G_DATABASES[dbref].ports = zalloc(sizeof(PortList));
+        G_DATABASES[dbref].ports = driver_calloc(sizeof(PortList));
         G_DATABASES[dbref].ports->port = data->port;
 
         // Make entry in hash table of names
@@ -1670,7 +1673,7 @@ static void do_async_get(void* arg)
     async_cleanup_and_send_kv(d, rc, &key, &value);
 
     // Finally, clean up value buffer (driver_send_term made a copy)
-    free(value.data);
+    driver_free(value.data);
 }
 
 static void do_async_del(void* arg)
@@ -1800,7 +1803,7 @@ static void do_async_cursor_get(void* arg)
     async_cleanup_and_send_kv(d, rc, &key, &value);
 
     // Finally, clean up value buffer (driver_send_term made a copy)
-    free(value.data);
+    driver_free(value.data);
 }
 
 
@@ -2043,14 +2046,12 @@ static void do_sync_driver_info(PortData *d)
 }
 
 
-static void* zalloc(unsigned int size)
+static void* driver_calloc(unsigned int size)
 {
     void* res = driver_alloc(size);
     memset(res, '\0', size);
     return res;
 }
-
-#define zfree(p) driver_free(p)
 
 static int add_portref(int dbref, ErlDrvPort port)
 {
@@ -2072,7 +2073,7 @@ static int add_portref(int dbref, ErlDrvPort port)
         } while (current != 0);
 
         // At the end of the list -- allocate a new entry for this port
-        current = (PortList*)zalloc(sizeof(PortList));
+        current = (PortList*)driver_calloc(sizeof(PortList));
         current->port = port;
         last->next = current;
         return 1;
@@ -2080,7 +2081,7 @@ static int add_portref(int dbref, ErlDrvPort port)
     else
     {
         // Current was initially NULL, so alloc the first one and add it.
-        current = zalloc(sizeof(PortList));
+        current = driver_calloc(sizeof(PortList));
         current->port = port;
         G_DATABASES[dbref].ports = current;
         return 1;
@@ -2108,7 +2109,7 @@ static int del_portref(int dbref, ErlDrvPort port)
             }
 
             // Delete this entry
-            zfree(current);
+            driver_free(current);
             return 1;
         }
 
@@ -2142,7 +2143,7 @@ static int add_dbref(PortData* data, int dbref)
         } while (current != 0);
 
         // At the end of the list -- allocate a new entry
-        current = zalloc(sizeof(DbRefList));
+        current = driver_calloc(sizeof(DbRefList));
         current->dbref = dbref;
         last->next = current;
         return 1;
@@ -2150,7 +2151,7 @@ static int add_dbref(PortData* data, int dbref)
     else
     {
         // Current was initially NULL, so alloc the first one
-        current = zalloc(sizeof(DbRefList));
+        current = driver_calloc(sizeof(DbRefList));
         current->dbref = dbref;
         data->dbrefs = current;
         return 1;
@@ -2183,7 +2184,7 @@ static int del_dbref(PortData* data, int dbref)
             }
 
             // Delete this entry
-            zfree(current);
+            driver_free(current);
             return 1;
         }
 
