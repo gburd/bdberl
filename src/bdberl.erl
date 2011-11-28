@@ -54,7 +54,7 @@
          mutex_stat_print/0, mutex_stat_print/1,
          txn_stat/0, txn_stat/1,
          txn_stat_print/0, txn_stat_print/1,
-         env_stat_print/0, env_stat_print/1, 
+         env_stat_print/0, env_stat_print/1,
          transaction/1, transaction/2, transaction/3, transaction/4,
          put/3, put/4,
          put_r/3, put_r/4,
@@ -552,9 +552,10 @@ transaction(Fun, Retries, Opts) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec transaction(Fun :: db_txn_fun(), Retries :: db_txn_retries(), 
+-spec transaction(Fun :: db_txn_fun(), Retries :: db_txn_retries(),
                   TimeLeft :: db_txn_timeleft(), Opts :: db_flags()) ->
     {ok, db_value()} | db_txn_error().
+
 transaction(_Fun, _Retries, TimeLeft, _Opts) when TimeLeft =/= infinity, TimeLeft < 0 ->
     {error, {transaction_failed, time_limit_reached}};
 
@@ -1082,7 +1083,7 @@ update(Db, Key, Fun, Args, Opts) ->
 %% @see update/7
 %% @end
 %%--------------------------------------------------------------------
--spec update(Db :: db(), Key :: db_key(), Fun :: db_update_fun(), Args :: db_update_fun_args(), 
+-spec update(Db :: db(), Key :: db_key(), Fun :: db_update_fun(), Args :: db_update_fun_args(),
              Retries :: db_txn_retries(), Opts :: db_flags()) ->
     {ok, db_value()} | db_txn_error().
 
@@ -1113,7 +1114,7 @@ update(Db, Key, Fun, Args, Retries, Opts) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec update(Db :: db(), Key :: db_key(), Fun :: db_update_fun(), Args :: db_update_fun_args(), 
+-spec update(Db :: db(), Key :: db_key(), Fun :: db_update_fun(), Args :: db_update_fun_args(),
              Retries :: db_txn_retries(), TimeLeft :: db_txn_timeleft(),  Opts :: db_flags()) ->
     {ok, db_value()} | db_txn_error().
 
@@ -1470,26 +1471,26 @@ get_txn_timeout() ->
 %% @doc
 %% Retrieve database stats
 %%
-%% This function retrieves database statistics 
+%% This function retrieves database statistics
 %%
 %% === Options ===
 %%
 %% <dl>
 %%   <dt>fast_stat</dt>
-%%   <dd>Return only the values which do not require traversal of the database. 
+%%   <dd>Return only the values which do not require traversal of the database.
 %%       Among  other things, this flag makes it possible for applications to
-%%       request key and record counts without incurring the performance 
+%%       request key and record counts without incurring the performance
 %%       penalty of traversing the entire database.</dd>
 %%   <dt>read_committed</dt>
-%%   <dd>Database items read during a transactional call will have degree 2 
+%%   <dd>Database items read during a transactional call will have degree 2
 %%       isolation. This ensures the stability of the data items read during
 %%       the stat operation but permits that data to be modified or deleted by
-%%       other transactions prior to the commit of the specified 
+%%       other transactions prior to the commit of the specified
 %%       transaction.</dd>
 %%   <dt>read_uncommitted</dt>
-%%   <dd>Database items read during a transactional call will have degree 1 
-%%       isolation, including modified but not yet committed data. Silently 
-%%       ignored if the read_committed flag was not specified when the 
+%%   <dd>Database items read during a transactional call will have degree 1
+%%       isolation, including modified but not yet committed data. Silently
+%%       ignored if the read_committed flag was not specified when the
 %%       underlying database was opened.</dd>
 %% </dl>
 %%
@@ -1536,20 +1537,20 @@ stat(Db) ->
 %%
 %% <dl>
 %%   <dt>fast_stat</dt>
-%%   <dd>Return only the values which do not require traversal of the database. 
+%%   <dd>Return only the values which do not require traversal of the database.
 %%       Among  other things, this flag makes it possible for applications to
-%%       request key and record counts without incurring the performance 
+%%       request key and record counts without incurring the performance
 %%       penalty of traversing the entire database.</dd>
 %%   <dt>read_committed</dt>
-%%   <dd>Database items read during a transactional call will have degree 2 
+%%   <dd>Database items read during a transactional call will have degree 2
 %%       isolation. This ensures the stability of the data items read during
 %%       the stat operation but permits that data to be modified or deleted by
 %%       other transactions prior to the commit of the specified transaction.
 %%       </dd>
 %%   <dt>read_uncommitted</dt>
-%%   <dd>Database items read during a transactional call will have degree 1 
-%%       isolation, including modified but not yet committed data. Silently 
-%%       ignored if the read_committed flag was not specified when the 
+%%   <dd>Database items read during a transactional call will have degree 1
+%%       isolation, including modified but not yet committed data. Silently
+%%       ignored if the read_committed flag was not specified when the
 %%       underlying database was opened.</dd>
 %% </dl>
 %%
@@ -2164,7 +2165,7 @@ init() ->
         _ ->
             ok
     end,
-    
+
     Port = open_port({spawn, bdberl_drv}, [binary]),
     erlang:put(bdb_port, Port),
     Port.
@@ -2221,28 +2222,29 @@ process_flags([Flag|Flags]) ->
 %%
 flag_value(Flag) ->
     case Flag of
-        append           -> ?DB_APPEND;
-        auto_commit      -> ?DB_AUTO_COMMIT;
-        consume          -> ?DB_CONSUME;
-        consume_wait     -> ?DB_CONSUME_WAIT;
-        create           -> ?DB_CREATE;
-        exclusive        -> ?DB_EXCL;
-        fast_stat        -> ?DB_FAST_STAT;
-        get_both         -> ?DB_GET_BOTH;
-        ignore_lease     -> ?DB_IGNORE_LEASE;
-        multiple         -> ?DB_MULTIPLE;
-        multiversion     -> ?DB_MULTIVERSION;
-        no_duplicate     -> ?DB_NODUPDATA;
-        no_mmap          -> ?DB_NOMMAP;
-        no_overwrite     -> ?DB_NOOVERWRITE;
-        read_committed   -> ?DB_READ_COMMITTED;
-        read_uncommitted -> ?DB_READ_UNCOMMITTED;
-        readonly         -> ?DB_RDONLY;
-        rmw              -> ?DB_RMW;
-        set_recno        -> ?DB_SET_RECNO;
-        stat_all         -> ?DB_STAT_ALL;
-        stat_clear       -> ?DB_STAT_CLEAR;
-        stat_lock_conf   -> ?DB_STAT_LOCK_CONF;
+        append            -> ?DB_APPEND;
+        auto_commit       -> ?DB_AUTO_COMMIT;
+        consume           -> ?DB_CONSUME;
+        consume_wait      -> ?DB_CONSUME_WAIT;
+        create            -> ?DB_CREATE;
+        exclusive         -> ?DB_EXCL;
+        fast_stat         -> ?DB_FAST_STAT;
+        get_both          -> ?DB_GET_BOTH;
+        ignore_lease      -> ?DB_IGNORE_LEASE;
+        multiple          -> ?DB_MULTIPLE;
+        multiple_key      -> ?DB_MULTIPLE_KEY;
+        multiversion      -> ?DB_MULTIVERSION;
+        no_duplicate      -> ?DB_NODUPDATA;
+        no_mmap           -> ?DB_NOMMAP;
+        no_overwrite      -> ?DB_NOOVERWRITE;
+        read_committed    -> ?DB_READ_COMMITTED;
+        read_uncommitted  -> ?DB_READ_UNCOMMITTED;
+        readonly          -> ?DB_RDONLY;
+        rmw               -> ?DB_RMW;
+        set_recno         -> ?DB_SET_RECNO;
+        stat_all          -> ?DB_STAT_ALL;
+        stat_clear        -> ?DB_STAT_CLEAR;
+        stat_lock_conf    -> ?DB_STAT_LOCK_CONF;
         stat_lock_lockers -> ?DB_STAT_LOCK_LOCKERS;
         stat_lock_objects -> ?DB_STAT_LOCK_OBJECTS;
         stat_lock_params  -> ?DB_STAT_LOCK_PARAMS;
@@ -2353,14 +2355,14 @@ recv_dirs_info(DirInfos) ->
         ok ->
             {ok, DirInfos}
     end.
-    
+
 %%
 %% Receive an ok or an {error, Reason} pair if Rc is ok
 %%
 recv_ok(Rc) ->
     case decode_rc(Rc) of
         ok ->
-            receive 
+            receive
                 ok ->
                     ok;
                 {error, Reason} ->
@@ -2376,7 +2378,7 @@ recv_ok(Rc) ->
 recv_val(Rc) ->
     case decode_rc(Rc) of
         ok ->
-            receive 
+            receive
                 {ok, Val} ->
                     {ok, Val};
                 {error, Reason} ->

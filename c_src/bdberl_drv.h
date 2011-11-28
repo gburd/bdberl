@@ -167,7 +167,7 @@ typedef struct
     TPool* async_pool;     /* Pool the async job is running on */
 
     void* work_buffer;
-    
+
     unsigned int work_buffer_sz;
 
     unsigned int work_buffer_offset;
