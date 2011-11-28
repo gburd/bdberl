@@ -24,7 +24,7 @@
 %% -------------------------------------------------------------------
 -module(stress_SUITE).
 -compile(export_all).
--include_lib("ct.hrl").
+-include_lib("common_test/include/ct.hrl").
 
 %% NOTE: all of the tests are set for a low number of iterations to guarantee
 %% that they all pass and run in a reasonable amount of time. That kinda defeats
@@ -36,11 +36,21 @@ all() ->
      write_array_test,
      write_bytes_test].
 
+dbconfig(Config) ->
+    Cfg = [
+           {set_data_dir, ?config(priv_dir, Config)},
+           {set_flags, 'DB_TXN_WRITE_NOSYNC'},
+           {set_cachesize, '0 536870912 1'},
+           {set_lg_max, '1048576000'},
+           {set_lg_bsize, '5368709120'},
+           {set_log_config, 'DB_LOG_IN_MEMORY'}
+          ],
+    list_to_binary(lists:flatten([io_lib:format("~s ~s\n", [K,V]) || {K, V} <- Cfg])).
+
 init_per_suite(Config) ->
-    {ok, Cwd} = file:get_cwd(),
-    {ok, _} = file:copy(lists:append([Cwd, "/../../int_test/DB_CONFIG"]),
-                        lists:append([Cwd, "/DB_CONFIG"])),
-    crypto:start(),
+    DbHome = ?config(priv_dir, Config),
+    os:putenv("DB_HOME", DbHome),
+    ok = file:write_file(DbHome ++ "DB_CONFIG", dbconfig(Config)),
     Config.
 
 end_per_suite(_Config) ->

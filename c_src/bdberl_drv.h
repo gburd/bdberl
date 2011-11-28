@@ -88,6 +88,8 @@
  */
 #define DB_TYPE_BTREE DB_BTREE  /* 1 */
 #define DB_TYPE_HASH  DB_HASH   /* 2 */
+#define DB_TYPE_RECNO DB_RECNO  /* 3 */
+#define DB_TYPE_QUEUE DB_QUEUE  /* 4 */
 
 /**
  * Error codes -- chosen so that we do not conflict with other packages, particularly

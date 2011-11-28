@@ -75,9 +75,11 @@ all() ->
 
 
 dbconfig(Config) ->
-    Cfg = [{set_data_dir, ?config(priv_dir, Config)},
+    Cfg = [
+           {set_data_dir, ?config(priv_dir, Config)},
            {set_flags, 'DB_TXN_NOSYNC'},
-           {log_set_config, 'DB_LOG_IN_MEMORY'}],
+           {log_set_config, 'DB_LOG_IN_MEMORY'}
+          ],
     list_to_binary(lists:flatten([io_lib:format("~s ~s\n", [K,V]) || {K, V} <- Cfg])).
 
 
@@ -342,7 +344,7 @@ hash_stat_should_report_on_success(_Config) ->
     1 = proplists:get_value(nkeys, Stat1),
     1 = proplists:get_value(ndata, Stat1),
     done.
-
+    
 stat_should_fail_on_bad_dbref(_Config) ->
     {error, invalid_db} = bdberl:stat(10000000, []),
     done.
@@ -382,7 +384,7 @@ data_dirs_info_should_report_on_success(_Config) ->
 
 lg_dir_info_should_report_on_success(_Config) ->
     {ok, _LgDir, _Fsid, _MBytesAvail} = bdberl:get_lg_dir_info().
-
+    
 %% Check the bdberl_logger gets reinstalled after stopping
 start_after_stop_should_be_safe(_Config) ->
 
@@ -411,5 +413,5 @@ start_after_stop_should_be_safe(_Config) ->
     end,
     true = lists:keymember(bdberl_logger, 1, supervisor:which_children(kernel_safe_sup)),
     ok.
-
+                
 

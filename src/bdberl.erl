@@ -188,6 +188,8 @@ open(Name, Type, Opts) ->
     case Type of
         btree -> TypeCode = ?DB_TYPE_BTREE;
         hash  -> TypeCode = ?DB_TYPE_HASH;
+        recno  -> TypeCode = ?DB_TYPE_RECNO;
+        queue  -> TypeCode = ?DB_TYPE_QUEUE;
         unknown -> TypeCode = ?DB_TYPE_UNKNOWN %% BDB automatically determines if file exists
     end,
     Flags = process_flags(lists:umerge(Opts, [auto_commit, threaded])),
@@ -2276,7 +2278,7 @@ stop() ->
 %% ====================================================================
 
 init() ->
-    case erl_ddll:load_driver(code:priv_dir(bdberl), bdberl_drv) of
+    case erl_ddll:load_driver(priv_dir(), bdberl_drv) of
         ok -> ok;
         {error, permanent} -> ok               % Means that the driver is already active
     end,
@@ -2294,6 +2296,15 @@ init() ->
     Port = open_port({spawn, bdberl_drv}, [binary]),
     erlang:put(bdb_port, Port),
     Port.
+
+priv_dir() ->
+    case code:priv_dir(?MODULE) of
+        Name when is_list(Name) ->
+            Name;
+        {error, bad_name} ->
+            {ok, Cwd} = file:get_cwd(),
+            filename:absname(filename:join(Cwd, "../priv"))
+    end.
 
 get_port() ->
     case erlang:get(bdb_port) of

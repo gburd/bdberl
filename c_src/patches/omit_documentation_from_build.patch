@@ -1,6 +1,24 @@
---- db-5.2.28/dist/Makefile.in.orig	2011-08-08 11:12:17.000000000 -0400
-+++ db-5.2.28/dist/Makefile.in	2011-08-08 11:13:04.000000000 -0400
-@@ -1066,9 +1066,9 @@
+--- db-5.2.36/dist/Makefile.in	2011-09-14 10:30:11.000000000 -0400
++++ db-5.2.36/dist/Makefile.in.patched	2011-11-28 12:15:04.000000000 -0500
+@@ -239,7 +239,7 @@
+ 
+ LOG_VRFY_OBJS=\
+ 	log_verify@o@ log_verify_util@o@ log_verify_int@o@ \
+-	log_verify_auto@o@ 
++	log_verify_auto@o@
+ 
+ MUTEX_OBJS=\
+ 	mut_alloc@o@ mut_failchk@o@ mut_method@o@ mut_region@o@ mut_stat@o@
+@@ -762,7 +762,7 @@
+ 	$(JAVA_EXDIR)/persist/gettingStarted/SimpleStorePut.java \
+ 	$(JAVA_EXDIR)/persist/txn/PayloadDataEntity.java \
+ 	$(JAVA_EXDIR)/persist/txn/StoreWriter.java \
+-	$(JAVA_EXDIR)/persist/txn/TxnGuideDPL.java 
++	$(JAVA_EXDIR)/persist/txn/TxnGuideDPL.java
+ 
+ SQL_OBJS=\
+ 	 sqlite3@o@ $(C_OBJS)
+@@ -1067,9 +1067,9 @@
  # Library and standard utilities install.
  ##################################################
  library_install: install_setup
@@ -12,7 +30,7 @@
  
  install_setup:
  	@test -d $(DESTDIR)$(prefix) || \
-@@ -1144,22 +1144,6 @@
+@@ -1145,22 +1145,6 @@
  		$(RM) $$i; \
  	done)
  
@@ -35,3 +53,21 @@
  
  ##################################################
  # Remaining standard Makefile targets.
+@@ -1335,7 +1319,7 @@
+ db_repsite: $(DBREPSITE_OBJS) $(DEF_LIB_CXX)
+ 	$(CXXLINK) -o $@ \
+ 	   $(LDFLAGS) $(DBREPSITE_OBJS) $(DEF_LIB_CXX) $(TEST_LIBS) $(LIBS)
+-	$(POSTLINK) $@ 
++	$(POSTLINK) $@
+ 
+ db_reptest@o@: $(testdir)/repmgr/db_reptest.c
+ 	$(CC) $(CFLAGS) $?
+@@ -1349,7 +1333,7 @@
+ 	$(CC) $(CFLAGS) $?
+ DBREPTEST_OBJS=\
+ 	db_reptest@o@ reptest_am@o@ reptest_handles@o@ \
+-	reptest_spawn@o@ reptest_util@o@ 
++	reptest_spawn@o@ reptest_util@o@
+ 
+ db_reptest: $(DBREPTEST_OBJS) $(DEF_LIB)
+ 	$(CCLINK) -o $@ \
