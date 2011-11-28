@@ -45,7 +45,7 @@ all() ->
      get_should_return_a_value_when_getting_a_valid_record,
      put_should_succeed_with_manual_transaction,
      put_should_rollback_with_failed_manual_transaction,
-%     del_should_remove_a_value,
+%     del_should_remove_a_value, %TODO: why is this disabled
      transaction_should_commit_on_success,
      transaction_should_abort_on_exception,
      transaction_should_abort_on_user_abort,
@@ -53,7 +53,7 @@ all() ->
      update_should_save_value_if_successful,
      update_should_accept_args_for_fun,
      port_should_return_transaction_timeouts,
-     cursor_should_iterate, cursor_should_fail_if_not_open,
+     cursor_should_iterate, cursor_get_should_pos, cursor_should_fail_if_not_open,
      put_commit_should_end_txn,
      data_dir_should_be_priv_dir,
      delete_should_remove_file,
@@ -223,7 +223,7 @@ cursor_should_iterate(Config) ->
     {ok, key3, value3} = bdberl:cursor_next(),
     not_found = bdberl:cursor_next(),
 
-    %% Validate that the "current" key is key3
+    %% Validate that the current key is key3
     {ok, key3, value3} = bdberl:cursor_current(),
 
     %% Now move backwards (should jump to key2, since we are "on" key3)
@@ -233,10 +233,35 @@ cursor_should_iterate(Config) ->
 
     ok = bdberl:cursor_close().
 
+cursor_get_should_pos(Config) ->
+    Db = ?config(db, Config),
+
+    %% Store some sample values in the db
+    ok = bdberl:put(Db, key1, value1),
+    ok = bdberl:put(Db, key2, value2),
+    ok = bdberl:put(Db, key3, value3),
+    ok = bdberl:put(Db, key4, value4),
+
+    %% Validate that the cursor is positioned properly, then
+    %% returns the next value.
+    ok = bdberl:cursor_open(Db),
+    {ok, value2} = bdberl:cursor_get(key2),
+    {ok, key3, value3} = bdberl:cursor_next(),
+    {ok, value2} = bdberl:cursor_get(key2),
+    {ok, key3, value3} = bdberl:cursor_next(),
+    {ok, value1} = bdberl:cursor_get(key1),
+    {ok, key2, value2} = bdberl:cursor_next(),
+    {ok, key3, value3} = bdberl:cursor_next(),
+    {ok, key4, value4} = bdberl:cursor_next(),
+    not_found = bdberl:cursor_next(),
+
+    ok = bdberl:cursor_close().
+
 cursor_should_fail_if_not_open(_Config) ->
     {error, no_cursor} = bdberl:cursor_next(),
     {error, no_cursor} = bdberl:cursor_prev(),
     {error, no_cursor} = bdberl:cursor_current(),
+    {error, no_cursor} = bdberl:cursor_get(),
     {error, no_cursor} = bdberl:cursor_close().
 
 put_commit_should_end_txn(Config) ->

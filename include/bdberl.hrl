@@ -46,6 +46,9 @@
 -define(CMD_CURSOR_NEXT,     12).
 -define(CMD_CURSOR_PREV,     13).
 -define(CMD_CURSOR_CLOSE,    14).
+-define(CMD_CURSOR_GET,      35). %% TODO: renumber these 3 and match them to bdberl_drv.h
+-define(CMD_CURSOR_PUT,      36).
+-define(CMD_CURSOR_DEL,      37).
 -define(CMD_PUT_COMMIT,      15).
 -define(CMD_REMOVE_DB,       16).
 -define(CMD_TRUNCATE,        17).

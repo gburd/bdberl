@@ -63,10 +63,11 @@
          get/2, get/3,
          get_r/2, get_r/3,
          update/3, update/4, update/5, update/6, update/7,
-	 del/2,
+         del/2,
          truncate/0, truncate/1,
          delete_database/1,
          cursor_open/1, cursor_next/0, cursor_prev/0, cursor_current/0, cursor_close/0,
+         cursor_get/0, cursor_get/1, cursor_get/2, %TODO: cursor_del/2, cursor_del/3, cursor_put/2, cursor_put/3,
          driver_info/0,
          register_logger/0,
          stop/0]).
@@ -1248,9 +1249,7 @@ cursor_prev() ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Retrieves key/data pairs from the database.
-%%
-%% Returns the key/data pair to which the cursor refers.
+%% Retrieves the key/data pair to which the cursor refers.
 %%
 %% Modifications to the database during a sequential scan will be
 %% reflected in the scan; that is, records inserted behind a cursor will
@@ -1268,6 +1267,132 @@ cursor_prev() ->
 
 cursor_current() ->
     do_cursor_move(?CMD_CURSOR_CURR).
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the key/data pair to which the cursor refers.
+%%
+%% Modifications to the database during a sequential scan will be
+%% reflected in the scan; that is, records inserted behind a cursor will
+%% not be returned while records inserted in front of a cursor will be
+%% returned.
+%%
+%% If this function fails for any reason, the state of the cursor will
+%% be unchanged.
+%%
+%% @spec cursor_get() -> not_found | {ok, Key, Value} | {error, Error}
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec cursor_get() -> {ok, db_key(), db_value()} | not_found | db_error().
+
+cursor_get() ->
+    cursor_current().
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Positions the cursor at the key and retrieves that key/data pair.
+%%
+%% Modifications to the database during a sequential scan will be
+%% reflected in the scan; that is, records inserted behind a cursor will
+%% not be returned while records inserted in front of a cursor will be
+%% returned.
+%%
+%% If this function fails for any reason, the state of the cursor will
+%% be unchanged.
+%%
+%% @spec cursor_get(Key) -> not_found | {ok, Key, Value} | {error, Error}
+%% where
+%%    Key = term()
+%%
+%% @equiv cursor_get(Key, [])
+%% @see cursor_get/2
+%% @end
+%%--------------------------------------------------------------------
+-spec cursor_get(Key :: db_key()) -> not_found | {ok, db_key(), db_value()} | db_error().
+
+cursor_get(Key) ->
+    cursor_get(Key, [db_set]).
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Positions the cursor at the key and retrieves that key/data pair.
+%%
+%% Modifications to the database during a sequential scan will be
+%% reflected in the scan; that is, records inserted behind a cursor will
+%% not be returned while records inserted in front of a cursor will be
+%% returned.
+%%
+%% If this function fails for any reason, the state of the cursor will
+%% be unchanged.
+%%
+%% === Options ===
+%%
+%% <dl>
+%%   <dt>db_current</dt>
+%%   <dd></dd>
+%%   <dt>db_first</dt>
+%%   <dd></dd>
+%%   <dt>db_get_both</dt>
+%%   <dd></dd>
+%%   <dt>db_get_both_range</dt>
+%%   <dd></dd>
+%%   <dt>db_last</dt>
+%%   <dd></dd>
+%%   <dt>db_next</dt>
+%%   <dd></dd>
+%%   <dt>db_next_dup</dt>
+%%   <dd></dd>
+%%   <dt>db_next_nodup</dt>
+%%   <dd></dd>
+%%   <dt>db_prev</dt>
+%%   <dd></dd>
+%%   <dt>db_prev_dup</dt>
+%%   <dd></dd>
+%%   <dt>db_prev_nodup</dt>
+%%   <dd></dd>
+%%   <dt>db_set</dt>
+%%   <dd></dd>
+%%   <dt>db_set_rance</dt>
+%%   <dd>TODO... finish the doc, add other DB_?? flags</dd>
+%% </dl>
+%%
+%% @spec cursor_get(Key, Opts) -> not_found | {ok, Key, Value} | {error, Error}
+%% where
+%%    Key = term()
+%%    Opts = [atom()]
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec cursor_get(Key :: db_key(), Opts :: db_flags()) ->
+    not_found | {ok, db_key(), db_value()} | db_error().
+
+cursor_get(Key, Opts) ->
+    {KeyLen, KeyBin} = to_binary(Key),
+    Flags = process_flags(Opts),
+    Cmd = <<Flags:32/native, KeyLen:32/native, KeyBin/bytes>>,
+    <<Result:32/signed-native>> = erlang:port_control(get_port(), ?CMD_CURSOR_GET, Cmd),
+    case decode_rc(Result) of
+        ok ->
+            receive
+                {ok, _, Bin} ->
+                    <<Crc:32/native, Payload/binary>> = Bin,
+                    case erlang:crc32(Payload) of
+                        Crc ->
+                            {ok, binary_to_term(Payload)};
+                        CrcOther ->
+                            error_logger:warning_msg("Invalid CRC: ~p ~p\n", [Crc, CrcOther]),
+                            {error, invalid_crc}
+                    end;
+                not_found -> not_found;
+                {error, Reason} -> {error, Reason}
+            end;
+        Error ->
+            {error, Error}
+    end.
 
 
 %%--------------------------------------------------------------------
@@ -2249,15 +2374,28 @@ flag_value(Flag) ->
         stat_lock_objects -> ?DB_STAT_LOCK_OBJECTS;
         stat_lock_params  -> ?DB_STAT_LOCK_PARAMS;
         stat_memp_hash    -> ?DB_STAT_MEMP_HASH;
-        stat_subsystem   -> ?DB_STAT_SUBSYSTEM;
-        threaded         -> ?DB_THREAD;
-        truncate         -> ?DB_TRUNCATE;
-        txn_no_sync      -> ?DB_TXN_NOSYNC;
-        txn_no_wait      -> ?DB_TXN_NOWAIT;
-        txn_snapshot     -> ?DB_TXN_SNAPSHOT;
-        txn_sync         -> ?DB_TXN_SYNC;
-        txn_wait         -> ?DB_TXN_WAIT;
-        txn_write_nosync -> ?DB_TXN_WRITE_NOSYNC
+        stat_subsystem    -> ?DB_STAT_SUBSYSTEM;
+        threaded          -> ?DB_THREAD;
+        truncate          -> ?DB_TRUNCATE;
+        txn_no_sync       -> ?DB_TXN_NOSYNC;
+        txn_no_wait       -> ?DB_TXN_NOWAIT;
+        txn_snapshot      -> ?DB_TXN_SNAPSHOT;
+        txn_sync          -> ?DB_TXN_SYNC;
+        txn_wait          -> ?DB_TXN_WAIT;
+        txn_write_nosync  -> ?DB_TXN_WRITE_NOSYNC;
+        db_current        -> ?DB_CURRENT;
+        db_first          -> ?DB_FIRST;
+        db_get_both       -> ?DB_GET_BOTH;
+        db_get_both_range -> ?DB_GET_BOTH_RANGE;
+        db_last           -> ?DB_LAST;
+        db_next           -> ?DB_NEXT;
+        db_next_dup       -> ?DB_NEXT_DUP;
+        db_next_nodup     -> ?DB_NEXT_NODUP;
+        db_prev           -> ?DB_PREV;
+        db_prev_dup       -> ?DB_PREV_DUP;
+        db_prev_nodup     -> ?DB_PREV_NODUP;
+        db_set            -> ?DB_SET;
+        db_set_range      -> ?DB_SET_RANGE
     end.
 
 
