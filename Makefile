@@ -1,5 +1,6 @@
 
 ERL             ?=erl
+CT_RUN          ?=ct_run
 ERL_FLAGS       ?=+A10
 REBAR_FLAGS     :=
 
@@ -10,6 +11,9 @@ test: tests
 
 tests:
 	@ $(REBAR) $(REBAR_FLAGS) eunit ct
+
+thrash-test:
+	@ $(CT_RUN) -pa test/ -suite thrash_SUITE
 
 clean:
 	$(REBAR) $(REBAR_FLAGS) clean
