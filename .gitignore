@@ -5,6 +5,7 @@
 *.so
 *.beam
 *.orig
+deps
 logs
 doc
 include/BDBERL-MIB.hrl

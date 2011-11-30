@@ -571,7 +571,7 @@ transaction(Fun, Retries, TimeLeft, Opts) ->
         ok ->
             try Fun() of
                 abort ->
-                    error_logger:info_msg("function requested abort"),
+                    lager:info("function requested abort"),
                     ok = txn_abort(),
                     {error, transaction_aborted};
 
@@ -595,7 +595,7 @@ transaction(Fun, Retries, TimeLeft, Opts) ->
                     transaction(Fun, R, T, Opts);
 
                 _ : Reason ->
-                    error_logger:info_msg("function threw non-lock error - ~p", [Reason]),
+                    lager:info("function threw non-lock error - ~p", [Reason]),
                     ok = txn_abort(),
                     {error, {transaction_failed, Reason}}
             end;
@@ -900,7 +900,7 @@ get(Db, Key, Opts) ->
                         Crc ->
                             {ok, binary_to_term(Payload)};
                         CrcOther ->
-                            error_logger:warning_msg("Invalid CRC: ~p ~p\n", [Crc, CrcOther]),
+                            lager:warning("Invalid CRC: ~p ~p\n", [Crc, CrcOther]),
                             {error, invalid_crc}
                     end;
                 not_found -> not_found;
@@ -1386,7 +1386,7 @@ cursor_get(Key, Opts) ->
                         Crc ->
                             {ok, binary_to_term(Payload)};
                         CrcOther ->
-                            error_logger:warning_msg("Invalid CRC: ~p ~p\n", [Crc, CrcOther]),
+                            lager:warning("Invalid CRC: ~p ~p\n", [Crc, CrcOther]),
                             {error, invalid_crc}
                     end;
                 not_found -> not_found;
@@ -2439,7 +2439,7 @@ do_cursor_move(Direction) ->
                         Crc ->
                             {ok, binary_to_term(KeyBin), binary_to_term(Payload)};
                         CrcOther ->
-                            error_logger:warning_msg("Invalid CRC on cursor: ~p ~p\n", [Crc, CrcOther]),
+                            lager:warning("Invalid CRC on cursor: ~p ~p\n", [Crc, CrcOther]),
                             {error, invalid_crc}
                     end;
                 not_found ->
