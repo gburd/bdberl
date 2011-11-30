@@ -45,9 +45,8 @@ all() ->
      get_should_return_a_value_when_getting_a_valid_record,
      put_should_succeed_with_manual_transaction,
      put_should_rollback_with_failed_manual_transaction,
-% TODO: Why do these two cause everything to lock up?!
-%     del_should_remove_a_value,
-%     aborted_del_should_not_remove_a_value,
+     del_should_remove_a_value,
+     aborted_del_should_not_remove_a_value,
      transaction_should_commit_on_success,
      transaction_should_abort_on_exception,
      transaction_should_abort_on_user_abort,
