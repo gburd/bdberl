@@ -977,7 +977,7 @@ get_r(Db, Key, Opts) ->
 %% This function will return `not_found' if the specified key is not in
 %% the database.
 %%
-%% @spec del(Db, Key) -> not_found | {ok, Value} | {error, Error}
+%% @spec del(Db, Key) -> ok | not_found | {error, Reason}
 %% where
 %%    Db = integer()
 %%    Key = term()
@@ -986,7 +986,7 @@ get_r(Db, Key, Opts) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec del(Db :: db(), Key :: db_key()) ->
-    not_found | ok | db_error().
+    ok | not_found | {error, Reason :: db_error()}.
 
 del(Db, Key) ->
     {KeyLen, KeyBin} = to_binary(Key),
@@ -995,7 +995,7 @@ del(Db, Key) ->
     case decode_rc(Result) of
         ok ->
             receive
-                {ok, _, _} -> ok;
+                ok -> ok;
                 not_found -> not_found;
                 {error, Reason} -> {error, Reason}
             end;
