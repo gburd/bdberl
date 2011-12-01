@@ -113,6 +113,7 @@ static void do_async_txnop(void* arg);
 static void do_async_cursor_put(void* arg);
 static void do_async_cursor_get(void* arg);
 static void do_async_cursor_del(void* arg);
+static void do_async_cursor_count(void* arg);
 static void do_async_cursor_cnp(void* arg);
 static void do_async_truncate(void* arg);
 static void do_sync_data_dirs_info(PortData *p);
@@ -846,6 +847,19 @@ static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
         // Let caller know operation is in progress
         RETURN_INT(0, outbuf);
     }
+    case CMD_CURSOR_COUNT:
+    {
+        FAIL_IF_ASYNC_PENDING(d, outbuf);
+        FAIL_IF_NO_CURSOR(d, outbuf);
+
+        // Schedule the operation
+        d->async_op = cmd;
+        bdberl_general_tpool_run(&do_async_cursor_count, d, 0, &d->async_job);
+
+        // Let caller know operation is in progress
+        // Outbuf is: <<0:32>>
+        RETURN_INT(0, outbuf);
+    }
     case CMD_CURSOR_CLOSE:
     {
         FAIL_IF_ASYNC_PENDING(d, outbuf);
@@ -1464,6 +1478,29 @@ static int send_dir_info(ErlDrvPort port, ErlDrvTermData pid, const char *path)
 }
 
 
+static void send_error_response(ErlDrvPort port, ErlDrvTermData pid, int rc)
+{
+    // See if this is a standard errno that we have an erlang code for
+    char *error = bdberl_rc_to_atom_str(rc);
+    if (error != NULL)
+    {
+        ErlDrvTermData response[] = { ERL_DRV_ATOM,  driver_mk_atom("error"),
+                                      ERL_DRV_ATOM,  driver_mk_atom(error),
+                                      ERL_DRV_TUPLE, 2};
+        driver_send_term(port, pid, response, sizeof(response) / sizeof(response[0]));
+    }
+    else
+    {
+        ErlDrvTermData response[] = { ERL_DRV_ATOM, driver_mk_atom("error"),
+                                      ERL_DRV_ATOM, driver_mk_atom("unknown"),
+                                      ERL_DRV_INT,  rc,
+                                      ERL_DRV_TUPLE, 2,
+                                      ERL_DRV_TUPLE, 2};
+        driver_send_term(port, pid, response, sizeof(response) / sizeof(response[0]));
+    }
+ }
+
+
 void bdberl_send_rc(ErlDrvPort port, ErlDrvTermData pid, int rc)
 {
     // TODO: May need to tag the messages a bit more explicitly so that if another async
@@ -1476,24 +1513,7 @@ void bdberl_send_rc(ErlDrvPort port, ErlDrvTermData pid, int rc)
     }
     else
     {
-        // See if this is a standard errno that we have an erlang code for
-        char *error = bdberl_rc_to_atom_str(rc);
-        if (error != NULL)
-        {
-            ErlDrvTermData response[] = { ERL_DRV_ATOM,  driver_mk_atom("error"),
-                                          ERL_DRV_ATOM,  driver_mk_atom(error),
-                                          ERL_DRV_TUPLE, 2};
-            driver_send_term(port, pid, response, sizeof(response) / sizeof(response[0]));
-        }
-        else
-        {
-            ErlDrvTermData response[] = { ERL_DRV_ATOM, driver_mk_atom("error"),
-                                          ERL_DRV_ATOM, driver_mk_atom("unknown"),
-                                          ERL_DRV_INT,  rc,
-                                          ERL_DRV_TUPLE, 2,
-                                          ERL_DRV_TUPLE, 2};
-            driver_send_term(port, pid, response, sizeof(response) / sizeof(response[0]));
-        }
+      send_error_response(port, pid, rc);
     }
 }
 
@@ -1509,6 +1529,32 @@ void bdberl_async_cleanup_and_send_rc(PortData* d, int rc)
 
     bdberl_async_cleanup(d);
     bdberl_send_rc(port, pid, rc);
+}
+
+static void async_cleanup_and_send_uint32(PortData* d, int rc, unsigned int value)
+{
+    // Save the port and pid references -- we need copies independent from the PortData
+    // structure. Once we release the port_lock after clearing the cmd, it's possible that
+    // the port could go away without waiting on us to finish. This is acceptable, but we need
+    // to be certain that there is no overlap of data between the two threads. driver_send_term
+    // is safe to use from a thread, even if the port you're sending from has already expired.
+    ErlDrvPort port = d->port;
+    ErlDrvTermData pid = d->port_owner;
+
+    bdberl_async_cleanup(d);
+
+    // Notify port of result
+    if (rc == 0)
+    {
+        ErlDrvTermData response[] = { ERL_DRV_ATOM, driver_mk_atom("ok"),
+                                      ERL_DRV_UINT, value,
+                                      ERL_DRV_TUPLE, 2};
+        driver_send_term(port, pid, response, sizeof(response) / sizeof(response[0]));
+    }
+    else
+    {
+        send_error_response(port, pid, rc);
+    }
 }
 
 static void async_cleanup_and_send_kv(PortData* d, int rc, DBT* key, DBT* value)
@@ -1539,24 +1585,7 @@ static void async_cleanup_and_send_kv(PortData* d, int rc, DBT* key, DBT* value)
     }
     else
     {
-        // See if this is a standard errno that we have an erlang code for
-        char *error = bdberl_rc_to_atom_str(rc);
-        if (error != NULL)
-        {
-            ErlDrvTermData response[] = { ERL_DRV_ATOM,  driver_mk_atom("error"),
-                                          ERL_DRV_ATOM,  driver_mk_atom(error),
-                                          ERL_DRV_TUPLE, 2};
-            driver_send_term(port, pid, response, sizeof(response) / sizeof(response[0]));
-        }
-        else
-        {
-            ErlDrvTermData response[] = { ERL_DRV_ATOM, driver_mk_atom("error"),
-                                          ERL_DRV_ATOM, driver_mk_atom("unknown"),
-                                          ERL_DRV_INT,  rc,
-                                          ERL_DRV_TUPLE, 2,
-                                          ERL_DRV_TUPLE, 2};
-            driver_send_term(port, pid, response, sizeof(response) / sizeof(response[0]));
-        }
+        send_error_response(port, pid, rc);
     }
 }
 
@@ -1810,10 +1839,27 @@ static void do_async_cursor_get(void* arg)
 
 static void do_async_cursor_del(void* arg)
 {
-  PortData* d = (PortData*)arg;
-  assert(d->cursor != NULL);
-  DBGCMD(d, "cursor_del/2 not yet implemented..."); /* TODO: implement this. */
-  bdberl_async_cleanup_and_send_rc(d, ERROR_DB_ACTIVE);
+    PortData* d = (PortData*)arg;
+    assert(d->cursor != NULL);
+    DBGCMD(d, "cursor_del/2 not yet implemented..."); /* TODO: implement this. */
+    bdberl_async_cleanup_and_send_rc(d, ERROR_DB_ACTIVE);
+}
+
+
+static void do_async_cursor_count(void* arg)
+{
+    PortData* d = (PortData*)arg;
+    assert(d->cursor != NULL);
+
+    // Place to store the record count.
+    db_recno_t count = 0;
+
+    // Execute the operation
+    DBGCMD(d, "d->cursor->count(%p, %p, %08X);", d->cursor, &count, 0);
+    int rc = d->cursor->count(d->cursor, &count, 0);
+    DBGCMDRC(d, rc);
+
+    async_cleanup_and_send_uint32(d, rc, count);
 }
 
 

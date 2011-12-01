@@ -53,9 +53,6 @@
 #define CMD_CURSOR_NEXT      12
 #define CMD_CURSOR_PREV      13
 #define CMD_CURSOR_CLOSE     14
-#define CMD_CURSOR_GET       35 /* TODO: renumber these next 3 and match them with bdberl.hrl */
-#define CMD_CURSOR_PUT       36
-#define CMD_CURSOR_DEL       37
 #define CMD_PUT_COMMIT       15
 #define CMD_REMOVE_DB        16
 #define CMD_TRUNCATE         17
@@ -76,6 +73,10 @@
 #define CMD_DATA_DIRS_INFO   32
 #define CMD_LOG_DIR_INFO     33
 #define CMD_DRIVER_INFO      34
+#define CMD_CURSOR_GET       35
+#define CMD_CURSOR_PUT       36
+#define CMD_CURSOR_DEL       37
+#define CMD_CURSOR_COUNT     38
 
 /**
  * Command status values

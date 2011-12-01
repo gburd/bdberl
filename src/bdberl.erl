@@ -68,6 +68,7 @@
          delete_database/1,
          cursor_open/1, cursor_next/0, cursor_prev/0, cursor_current/0, cursor_close/0,
          cursor_get/0, cursor_get/1, cursor_get/2, %TODO: cursor_del/2, cursor_del/3, cursor_put/2, cursor_put/3,
+         cursor_count/0,
          driver_info/0,
          register_logger/0,
          stop/0]).
@@ -1395,6 +1396,25 @@ cursor_get(Key, Opts) ->
         Error ->
             {error, Error}
     end.
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Returns the count of duplicate records for the key to which the
+%% cursor currently refers.
+%%
+%% If this function fails for any reason, the state of the cursor will
+%% be unchanged.
+%%
+%% @spec cursor_count() -> {ok, Count} | {error, Error}
+%%
+%% @end
+%%--------------------------------------------------------------------
+-spec cursor_count() -> {ok, Count :: number()} | {error, db_error()}.
+
+cursor_count() ->
+    <<Result:32/signed-native>> = erlang:port_control(get_port(), ?CMD_CURSOR_COUNT, <<>>),
+    recv_val(Result).
 
 
 %%--------------------------------------------------------------------
