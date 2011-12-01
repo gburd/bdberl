@@ -79,11 +79,11 @@ handle_cast(_Msg, State) ->
     {stop, unsupportedOperation, State}.
 
 handle_info({bdb_error_log, Msg}, State) ->
-    lager:error("BDB Error: ~s\n", [Msg]),
+    lager:error("BDB: ~s\n", [Msg]),
     {noreply, State};
 
 handle_info({bdb_info_log, Msg}, State) ->
-    lager:info("BDB Info: ~s\n", [Msg]),
+    lager:info("BDB: ~s\n", [Msg]),
     {noreply, State};
 
 handle_info({bdb_checkpoint_stats, CheckpointSecs, ArchiveSecs, 0, 0}, State) ->
@@ -98,7 +98,7 @@ handle_info({bdb_checkpoint_stats, CheckpointSecs, ArchiveSecs, 0, 0}, State) ->
     {noreply, State};
 
 handle_info({bdb_checkpoint_stats, _CheckpointSecs, _ArchiveSecs, CheckpointRc, ArchiveRc}, State) ->
-    lager:error("BDB Checkpoint error: ~w ~w\n", [CheckpointRc, ArchiveRc]),
+    lager:error("BDB Checkpoint: ~w ~w\n", [CheckpointRc, ArchiveRc]),
     {noreply, State};
 
 handle_info({bdb_trickle_stats, ElapsedSecs, Pages, 0}, State) ->
@@ -112,11 +112,11 @@ handle_info({bdb_trickle_stats, ElapsedSecs, Pages, 0}, State) ->
     end,
     {noreply, State};
 handle_info({bdb_trickle_stats, _ElapsedSecs, _Pages, Rc}, State) ->
-    lager:error("BDB Trickle Write error: ~w\n", [Rc]),
+    lager:error("BDB Trickle Write: ~w\n", [Rc]),
     {noreply, State};
 
 handle_info(Msg, State) ->
-    io:format("Unexpected message: ~p\n", [Msg]),
+    lager:info("Unexpected message: ~p\n", [Msg]),
     {noreply, State}.
 
 terminate(_Reason, _State) ->

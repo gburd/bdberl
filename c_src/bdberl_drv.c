@@ -231,9 +231,10 @@ static TPool* G_TPOOL_TXNS    = NULL;
  * Helpful macros
  */
 #ifdef DEBUG
-#  define DBG(...) fprintf(stderr, __VA_ARGS__)
+#  define DBG(...) bdberl_dbg(__VA_ARGS__)
 #  define DBGCMD(P, ...)   bdberl_dbgcmd(P, __VA_ARGS__)
 #  define DBGCMDRC(P, ...) bdberl_dbgcmdrc(P, __VA_ARGS__)
+static void bdberl_dbg(const char * fmt, ...);
 static void bdberl_dbgcmd(PortData *d, const char *fmt, ...);
 static void bdberl_dbgcmdrc(PortData *d, int rc);
 #else
@@ -246,17 +247,17 @@ static void bdberl_dbgcmdrc(PortData *d, int rc);
 #define LOCK_DATABASES(P)                                               \
     do                                                                  \
     {                                                                   \
-        DBG("threadid %p port %p: locking G_DATABASES\r\n", erl_drv_thread_self(), P);   \
+        DBG("threadid %p port %p: locking G_DATABASES", erl_drv_thread_self(), P);   \
         erl_drv_mutex_lock(G_DATABASES_MUTEX);                          \
-        DBG("threadid %p port %p: locked G_DATABASES\r\n", erl_drv_thread_self(), P);    \
+        DBG("threadid %p port %p: locked G_DATABASES", erl_drv_thread_self(), P);    \
     } while(0)
 
 #define UNLOCK_DATABASES(P)                                             \
     do                                                                  \
     {                                                                   \
-        DBG("threadid %p port %p: unlocking G_DATABASES\r\n", erl_drv_thread_self(), P); \
+        DBG("threadid %p port %p: unlocking G_DATABASES", erl_drv_thread_self(), P); \
         erl_drv_mutex_unlock(G_DATABASES_MUTEX);                        \
-        DBG("threadid %p port %p: unlocked G_DATABASES\r\n", erl_drv_thread_self(), P);  \
+        DBG("threadid %p port %p: unlocked G_DATABASES", erl_drv_thread_self(), P);  \
     } while (0)
 
 
@@ -268,7 +269,7 @@ static void bdberl_dbgcmdrc(PortData *d, int rc);
 
 DRIVER_INIT(bdberl_drv)
 {
-    DBG("DRIVER INIT\r\n");
+    DBG("DRIVER INIT");
     // Setup flags we'll use to init the environment
     int flags =
         DB_INIT_LOCK |          /* Enable support for locking */
@@ -292,7 +293,7 @@ DRIVER_INIT(bdberl_drv)
     // specify where the working directory is
     DBG("db_env_create(%p, 0)", &G_DB_ENV);
     G_DB_ENV_ERROR = db_env_create(&G_DB_ENV, 0);
-    DBG(" = %d\r\n", G_DB_ENV_ERROR);
+    DBG(" = %d", G_DB_ENV_ERROR);
     if (G_DB_ENV_ERROR != 0)
     {
         G_DB_ENV = 0;
@@ -300,17 +301,17 @@ DRIVER_INIT(bdberl_drv)
     else
     {
         G_DB_ENV_ERROR = G_DB_ENV->set_alloc(G_DB_ENV, driver_alloc, driver_realloc, driver_free);
-        DBG(" = %d\r\n", G_DB_ENV_ERROR);
+        DBG(" = %d", G_DB_ENV_ERROR);
 
         DBG("G_DB_ENV->open(%p, 0, %08X, 0)", &G_DB_ENV, flags);
         G_DB_ENV_ERROR = G_DB_ENV->open(G_DB_ENV, 0, flags, 0);
-        DBG(" = %d\r\n", G_DB_ENV_ERROR);
+        DBG(" = %d", G_DB_ENV_ERROR);
         if (G_DB_ENV_ERROR != 0)
         {
             // Something bad happened while initializing BDB; in this situation we
             // cleanup and set the environment to zero. Attempts to open ports will
             // fail and the user will have to sort out how to resolve the issue.
-            DBG("G_DB_ENV->close(%p, 0);\r\n", &G_DB_ENV);
+            DBG("G_DB_ENV->close(%p, 0);", &G_DB_ENV);
             G_DB_ENV->close(G_DB_ENV, 0);
             G_DB_ENV = 0;
         }
@@ -344,7 +345,7 @@ DRIVER_INIT(bdberl_drv)
             }
             else
             {
-                fprintf(stderr, "Ignoring \"BDBERL_PAGE_SIZE\" value %u - not power of 2\r\n",
+                fprintf(stderr, "Ignoring \"BDBERL_PAGE_SIZE\" value %u - not power of 2",
                     page_size);
             }
         }
@@ -388,7 +389,7 @@ DRIVER_INIT(bdberl_drv)
     }
     else
     {
-        DBG("DRIVER INIT FAILED - %s\r\n", db_strerror(G_DB_ENV_ERROR));
+        DBG("DRIVER INIT FAILED - %s", db_strerror(G_DB_ENV_ERROR));
     }
 
     return &bdberl_drv_entry;
@@ -396,7 +397,7 @@ DRIVER_INIT(bdberl_drv)
 
 static ErlDrvData bdberl_drv_start(ErlDrvPort port, char* buffer)
 {
-    DBG("threadid %p port %p: BDB DRIVER STARTING\r\n",
+    DBG("threadid %p port %p: BDB DRIVER STARTING",
         erl_drv_thread_self(), port);
 
     // Make sure we have a functional environment -- if we don't,
@@ -434,7 +435,7 @@ static void bdberl_drv_stop(ErlDrvData handle)
 {
     PortData* d = (PortData*)handle;
 
-    DBG("Stopping port %p\r\n", d->port);
+    DBG("Stopping port %p", d->port);
 
     // Grab the port lock, in case we have an async job running
     erl_drv_mutex_lock(d->port_lock);
@@ -443,13 +444,13 @@ static void bdberl_drv_stop(ErlDrvData handle)
     // block until the job has either been removed or has run
     if (d->async_job)
     {
-        DBGCMD(d, "Stopping port %p - cancelling async job %p\r\n", d->port, d->async_job);
+        DBGCMD(d, "Stopping port %p - cancelling async job %p", d->port, d->async_job);
 
         // Drop the lock prior to starting the wait for the async process
         erl_drv_mutex_unlock(d->port_lock);
 
         bdberl_tpool_cancel(d->async_pool, d->async_job);
-        DBGCMD(d, "Canceled async job for port: %p\r\n", d->port);
+        DBGCMD(d, "Canceled async job for port: %p", d->port);
     }
     else
     {
@@ -461,7 +462,7 @@ static void bdberl_drv_stop(ErlDrvData handle)
     erl_drv_mutex_destroy(d->port_lock);
 
     // If a cursor is open, close it
-    DBG("Stopping port %p - cleaning up cursors (%p) and transactions (%p)\r\n", d->port,
+    DBG("Stopping port %p - cleaning up cursors (%p) and transactions (%p)", d->port,
         d->cursor, d->txn);
 
     if (d->cursor)
@@ -473,13 +474,13 @@ static void bdberl_drv_stop(ErlDrvData handle)
     abort_txn(d);
 
     // Close all the databases we previously opened
-    DBG("Stopping port %p - closing all dbrefs\r\n", d->port);
+    DBG("Stopping port %p - closing all dbrefs", d->port);
     while (d->dbrefs)
     {
         int dbref = d->dbrefs->dbref;
         if (close_database(dbref, 0, d) != ERROR_NONE)
         {
-            DBG("Stopping port %p could not close dbref %d\r\n", d->port, dbref);
+            DBG("Stopping port %p could not close dbref %d", d->port, dbref);
         }
     }
 
@@ -488,7 +489,7 @@ static void bdberl_drv_stop(ErlDrvData handle)
     // unregister if it's already initialized to this port.
     if (G_LOG_PORT == d->port)
     {
-        DBG("Stopping port %p - removing logging port\r\n", d->port);
+        DBG("Stopping port %p - removing logging port", d->port);
 
         WRITE_LOCK(G_LOG_RWLOCK);
 
@@ -503,7 +504,7 @@ static void bdberl_drv_stop(ErlDrvData handle)
         WRITE_UNLOCK(G_LOG_RWLOCK);
     }
 
-    DBG("Stopped port: %p\r\n", d->port);
+    DBG("Stopped port: %p", d->port);
 
     // Release the port instance data
     driver_free(d->work_buffer);
@@ -512,7 +513,7 @@ static void bdberl_drv_stop(ErlDrvData handle)
 
 static void bdberl_drv_finish()
 {
-    DBG("BDB DRIVER FINISHING\r\n");
+    DBG("BDB DRIVER FINISHING");
     // Stop the thread pools
     if (G_TPOOL_GENERAL != NULL)
     {
@@ -591,7 +592,7 @@ static void bdberl_drv_finish()
         G_LOG_RWLOCK = NULL;
     }
 
-    DBG("BDB DRIVER FINISHED\r\n");
+    DBG("BDB DRIVER FINISHED");
 }
 
 static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
@@ -790,8 +791,8 @@ static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
 
         // Inbuf is <<Flags:32/native, KeyLen:32/native, KeyBin/bytes>>,
 
-        // If the working buffer is large enough, copy the data to put/get into it. Otherwise, realloc
-        // until it is large enough
+        // If the working buffer is large enough, copy the data to put/get into it.
+        // Otherwise, realloc until it is large enough
         if (d->work_buffer_sz < inbuf_sz)
         {
             d->work_buffer = driver_realloc(d->work_buffer, inbuf_sz);
@@ -850,8 +851,8 @@ static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
         FAIL_IF_ASYNC_PENDING(d, outbuf);
         FAIL_IF_NO_CURSOR(d, outbuf);
 
-        // It's possible to get a deadlock when closing a cursor -- in that situation we also
-        // need to go ahead and abort the txn
+        // It's possible to get a deadlock when closing a cursor,
+        // in that situation we also need to go ahead and abort the txn.
         int rc = d->cursor->close(d->cursor);
         if (d->txn && (rc == DB_LOCK_NOTGRANTED || rc == DB_LOCK_DEADLOCK))
         {
@@ -1008,16 +1009,16 @@ static int check_non_neg_env(char *env, unsigned int *val_ptr)
         long long val = strtoll(val_str, NULL, 0);
         if (val == 0 && errno == EINVAL)
         {
-            fprintf(stderr, "Ignoring \"%s\" value \"%s\" - invalid value\r\n", env, val_str);
+            fprintf(stderr, "Ignoring \"%s\" value \"%s\" - invalid value\n", env, val_str);
             return 0;
         }
         if (val <= 0 || val > UINT_MAX)
         {
-            fprintf(stderr, "Ignoring \"%s\" value \"%lld\" - out of range\r\n", env, val);
+            fprintf(stderr, "Ignoring \"%s\" value \"%lld\" - out of range\n", env, val);
             return 0;
         }
         unsigned int uival = (unsigned int) val;
-        DBG("Using \"%s\" value %u\r\n", env, uival);
+        DBG("Using \"%s\" value %u", env, uival);
         *val_ptr = uival;
         return 1;
     }
@@ -1043,7 +1044,7 @@ static int check_pos_env(char *env, unsigned int *val_ptr)
         }
         else
         {
-            fprintf(stderr, "Ignoring \"%s\" value \"%u\" - out of range\r\n", env, *val_ptr);
+            fprintf(stderr, "Ignoring \"%s\" value \"%u\" - out of range\n", env, *val_ptr);
             *val_ptr = original_val;
             return 0;
         }
@@ -1245,7 +1246,7 @@ static void check_all_databases_closed()
         Database* database = &G_DATABASES[dbref];
         if (database->ports != NULL)
         {
-            fprintf(stderr, "BDBERL: Ports still open on '%s' dbref %d\r\n",
+            fprintf(stderr, "BDBERL: Ports still open on '%s' dbref %d\n",
                     database->name ? database->name : "no name", dbref);
         }
 
@@ -1254,7 +1255,7 @@ static void check_all_databases_closed()
             int flags = 0;
             DBG("final db->close(%p, %08x) (for dbref %d)", database->db, flags, dbref);
             rc = database->db->close(database->db, flags);
-            DBG(" = %s (%d)\r\n", rc == 0 ? "ok" : bdberl_rc_to_atom_str(rc), rc);
+            DBG(" = %s (%d)", rc == 0 ? "ok" : bdberl_rc_to_atom_str(rc), rc);
         }
     }
 
@@ -1287,7 +1288,7 @@ static int delete_database(const char* name, PortData *data)
     }
 
     // Good, database doesn't seem to be open -- attempt the delete
-    DBG("Attempting to delete database: %s\r\n", name);
+    DBG("Attempting to delete database: %s", name);
     int rc = G_DB_ENV->dbremove(G_DB_ENV, 0, name, 0, DB_AUTO_COMMIT);
     UNLOCK_DATABASES(data->port);
 
@@ -1882,7 +1883,7 @@ static void do_async_truncate(void* arg)
 
     if (d->async_dbref == -1)
     {
-        DBG("Truncating all open databases...\r\n");
+        DBG("Truncating all open databases...");
 
         // Iterate over the whole database list skipping null entries
         int i = 0; // I hate C
@@ -2055,7 +2056,7 @@ static void* driver_calloc(unsigned int size)
 
 static int add_portref(int dbref, ErlDrvPort port)
 {
-    DBG("Adding port %p to dbref %d\r\n", port, dbref);
+    DBG("Adding port %p to dbref %d", port, dbref);
     PortList* current = G_DATABASES[dbref].ports;
     if (current)
     {
@@ -2090,7 +2091,7 @@ static int add_portref(int dbref, ErlDrvPort port)
 
 static int del_portref(int dbref, ErlDrvPort port)
 {
-    DBG("Deleting port %p from dbref %d\r\n", port, dbref);
+    DBG("Deleting port %p from dbref %d", port, dbref);
     PortList* current = G_DATABASES[dbref].ports;
     PortList* last = 0;
     assert(current != NULL);
@@ -2126,7 +2127,7 @@ static int del_portref(int dbref, ErlDrvPort port)
  */
 static int add_dbref(PortData* data, int dbref)
 {
-    DBG("Adding dbref %d to port %p\r\n", dbref, data->port);
+    DBG("Adding dbref %d to port %p", dbref, data->port);
     DbRefList* current = data->dbrefs;
     if (current)
     {
@@ -2163,7 +2164,7 @@ static int add_dbref(PortData* data, int dbref)
  */
 static int del_dbref(PortData* data, int dbref)
 {
-    DBG("Deleting dbref %d from port %p\r\n", dbref, data->port);
+    DBG("Deleting dbref %d from port %p", dbref, data->port);
 
     DbRefList* current = data->dbrefs;
     DbRefList* last = 0;
@@ -2315,7 +2316,7 @@ static void* deadlock_check(void* arg)
         }
         if (count > 0)
         {
-            DBG("Rejected deadlocks: %d\r\n", count);
+            DBG("Rejected deadlocks: %d", count);
         }
 
         if (G_DEADLOCK_CHECK_INTERVAL > 0)
@@ -2324,7 +2325,7 @@ static void* deadlock_check(void* arg)
         }
     }
 
-    DBG("Deadlock checker exiting.\r\n");
+    DBG("Deadlock checker exiting.");
     return 0;
 }
 
@@ -2414,6 +2415,19 @@ static void send_log_message(ErlDrvTermData* msg, int elements)
 }
 
 #ifdef DEBUG
+static void bdberl_dbg(const char *fmt, ...)
+{
+    char buf[1024];
+
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+
+    (void)fprintf(stderr, "%s\n", buf);
+    (void)fflush(stderr);
+}
+
 static void bdberl_dbgcmd(PortData *d, const char *fmt, ...)
 {
     char buf[1024];
@@ -2423,12 +2437,14 @@ static void bdberl_dbgcmd(PortData *d, const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    (void)fprintf(stderr, "threadid %p port %p: %s\r\n", erl_drv_thread_self(), d->port, buf);
+    (void)fprintf(stderr, "threadid %p port %p: %s\n", erl_drv_thread_self(), d->port, buf);
+    (void)fflush(stderr);
 }
 
 static void bdberl_dbgcmdrc(PortData *d, int rc)
 {
-    (void)fprintf(stderr, "threadid %p port %p: rc = %s (%d)\r\n",
+    (void)fprintf(stderr, "threadid %p port %p: rc = %s (%d)\n",
                   erl_drv_thread_self(), d->port, rc == 0 ? "ok" : bdberl_rc_to_atom_str(rc), rc);
+    (void)fflush(stderr);
 }
 #endif // DEBUG

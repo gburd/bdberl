@@ -2235,6 +2235,7 @@ driver_info() ->
     <<Rc:32/signed-native>> = erlang:port_control(get_port(), ?CMD_DRIVER_INFO, <<>>),
     recv_val(Rc).
 
+
 %%--------------------------------------------------------------------
 %% @doc
 %% Registers the port owner pid to receive any BDB err/msg events. Note
@@ -2250,6 +2251,7 @@ driver_info() ->
 register_logger() ->
     [] = erlang:port_control(get_port(), ?CMD_REGISTER_LOGGER, <<>>),
     ok.
+
 
 %%--------------------------------------------------------------------
 %% @doc
