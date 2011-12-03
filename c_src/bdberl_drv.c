@@ -1169,6 +1169,8 @@ static int open_database(const char* name, DBTYPE type, unsigned int flags, Port
             }
         }
 
+        flags |= DB_AUTO_COMMIT;
+
         // Attempt to open our database
         DBGCMD(data, "db->open(%p, 0, '%s', 0, %x, %08x, 0);", db, name, type, flags);
         rc = db->open(db, 0, name, 0, type, flags, 0);
