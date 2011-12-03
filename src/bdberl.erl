@@ -1374,7 +1374,12 @@ cursor_get(Key) ->
     not_found | {ok, db_key(), db_value()} | db_error().
 
 cursor_get(Key, Opts) ->
-    {KeyLen, KeyBin} = to_binary(Key),
+    case Key of
+        undefined ->
+            {KeyLen, KeyBin} = {0, <<>>};
+        _ ->
+            {KeyLen, KeyBin} = to_binary(Key)
+    end,
     Flags = process_flags(Opts),
     Cmd = <<Flags:32/native, KeyLen:32/native, KeyBin/bytes>>,
     <<Result:32/signed-native>> = erlang:port_control(get_port(), ?CMD_CURSOR_GET, Cmd),
