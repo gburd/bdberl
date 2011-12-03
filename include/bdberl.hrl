@@ -385,3 +385,28 @@
 -define(DB_UPDATE_SECONDARY,          29).
 -define(DB_SET_LTE,          30).
 -define(DB_GET_BOTH_LTE,     31).
+
+%% DB Event notification types.
+-define(DB_EVENT_PANIC,                  0).
+-define(DB_EVENT_REG_ALIVE,              1).
+-define(DB_EVENT_REG_PANIC,              2).
+-define(DB_EVENT_REP_CLIENT,             3).
+-define(DB_EVENT_REP_CONNECT_BROKEN,     4).
+-define(DB_EVENT_REP_CONNECT_ESTD,       5).
+-define(DB_EVENT_REP_CONNECT_TRY_FAILED,         6).
+-define(DB_EVENT_REP_DUPMASTER,          7).
+-define(DB_EVENT_REP_ELECTED,            8).
+-define(DB_EVENT_REP_ELECTION_FAILED,    9).
+-define(DB_EVENT_REP_INIT_DONE,         10).
+-define(DB_EVENT_REP_JOIN_FAILURE,      11).
+-define(DB_EVENT_REP_LOCAL_SITE_REMOVED,        12).
+-define(DB_EVENT_REP_MASTER,            13).
+-define(DB_EVENT_REP_MASTER_FAILURE,    14).
+-define(DB_EVENT_REP_NEWMASTER,         15).
+-define(DB_EVENT_REP_PERM_FAILED,       16).
+-define(DB_EVENT_REP_SITE_ADDED,                17).
+-define(DB_EVENT_REP_SITE_REMOVED,      18).
+-define(DB_EVENT_REP_STARTUPDONE,       19).
+-define(DB_EVENT_REP_WOULD_ROLLBACK,    20).
+-define(DB_EVENT_WRITE_FAILED,          21).
+-define(DB_EVENT_NO_SUCH_EVENT,          0xffffffff).

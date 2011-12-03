@@ -137,6 +137,7 @@ static void* checkpointer(void* arg);
 
 static void bdb_errcall(const DB_ENV* dbenv, const char* errpfx, const char* msg);
 static void bdb_msgcall(const DB_ENV* dbenv, const char* msg);
+static void bdb_eventcall(DB_ENV* dbenv, u_int32_t type, void* msg);
 static void send_log_message(ErlDrvTermData* msg, int elements);
 
 /**
@@ -501,6 +502,7 @@ static void bdberl_drv_stop(ErlDrvData handle)
         // Unregister with BDB -- MUST DO THIS WITH WRITE LOCK HELD!
         G_DB_ENV->set_msgcall(G_DB_ENV, 0);
         G_DB_ENV->set_errcall(G_DB_ENV, 0);
+        G_DB_ENV->set_event_notify(G_DB_ENV, 0);
 
         WRITE_UNLOCK(G_LOG_RWLOCK);
     }
@@ -934,6 +936,7 @@ static int bdberl_drv_control(ErlDrvData handle, unsigned int cmd,
 
             G_DB_ENV->set_msgcall(G_DB_ENV, &bdb_msgcall);
             G_DB_ENV->set_errcall(G_DB_ENV, &bdb_errcall);
+            G_DB_ENV->set_event_notify(G_DB_ENV, &bdb_eventcall);
 
             WRITE_UNLOCK(G_LOG_RWLOCK);
         }
@@ -2450,6 +2453,32 @@ static void bdb_msgcall(const DB_ENV* dbenv, const char* msg)
                                   ERL_DRV_STRING, (ErlDrvTermData)msg, (ErlDrvUInt)strlen(msg),
                                   ERL_DRV_TUPLE, 2};
     send_log_message(response, sizeof(response));
+}
+
+static void bdb_eventcall(DB_ENV* dbenv, u_int32_t type, void* info)
+{
+    switch(type)
+    {
+    case DB_EVENT_PANIC:
+    {
+        const char *msg = "panic";
+        ErlDrvTermData response[] = { ERL_DRV_ATOM, driver_mk_atom("bdb_event_notify"),
+                                      ERL_DRV_STRING, (ErlDrvTermData)msg, (ErlDrvUInt)strlen(msg),
+                                      ERL_DRV_TUPLE, 2};
+        // TODO clearly something should be done to shut things down cleanly and restart (how?)
+        send_log_message(response, sizeof(response));
+        break;
+    }
+    case DB_EVENT_WRITE_FAILED:
+    {
+        const char *msg = "write failed";
+        ErlDrvTermData response[] = { ERL_DRV_ATOM, driver_mk_atom("bdb_event_notify"),
+                                      ERL_DRV_STRING, (ErlDrvTermData)msg, (ErlDrvUInt)strlen(msg),
+                                      ERL_DRV_TUPLE, 2};
+        send_log_message(response, sizeof(response));
+        break;
+    }
+    }
 }
 
 static void send_log_message(ErlDrvTermData* msg, int elements)
