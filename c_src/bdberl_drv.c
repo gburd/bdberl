@@ -263,6 +263,9 @@ DRIVER_INIT(bdberl_drv)
         DB_RECOVER |            /* Enable support for recovering from failures */
         DB_CREATE |             /* Create files as necessary */
         DB_REGISTER |           /* Run recovery if needed */
+        DB_FAILCHK |            /* Release any database reads locks held by the
+                                   thread of control that exited and, if needed,
+                                   abort unresolved transaction. */
         DB_USE_ENVIRON |        /* Use DB_HOME environment variable */
         DB_THREAD;              /* Make the environment free-threaded */
 
@@ -285,9 +288,30 @@ DRIVER_INIT(bdberl_drv)
     }
     else
     {
+        // DB should use the safe allocation routines provided by the Erlang VM
+        DBG("G_DB_ENV->set_alloc(%p, ...)", &G_DB_ENV);
         G_DB_ENV_ERROR = G_DB_ENV->set_alloc(G_DB_ENV, driver_alloc, driver_realloc, driver_free);
-        DBG(" = %d", G_DB_ENV_ERROR);
+        DBG(" = %d\n", G_DB_ENV_ERROR);
 
+        // Inform DB of the number of threads that will be operating on the DB Environment
+        unsigned int nthreads = G_NUM_GENERAL_THREADS + G_NUM_TXN_THREADS;
+        DBG("G_DB_ENV->set_thread_count(%p, %d, ...)", &G_DB_ENV, nthreads);
+        G_DB_ENV_ERROR = G_DB_ENV->set_thread_count(G_DB_ENV, nthreads);
+        DBG(" = %d\n", G_DB_ENV_ERROR);
+
+        DBG("G_DB_ENV->set_thread_id(%p, ...)", &G_DB_ENV);
+        G_DB_ENV_ERROR = G_DB_ENV->set_thread_id(G_DB_ENV, &bdberl_tpool_thread_id);
+        DBG(" = %d\n", G_DB_ENV_ERROR);
+
+        DBG("G_DB_ENV->set_thread_id_string(%p, ...)", &G_DB_ENV);
+        G_DB_ENV_ERROR = G_DB_ENV->set_thread_id_string(G_DB_ENV, &bdberl_tpool_thread_id_string);
+        DBG(" = %d\n", G_DB_ENV_ERROR);
+
+        DBG("G_DB_ENV->set_is_alive(%p, ...)", &G_DB_ENV);
+        G_DB_ENV_ERROR = G_DB_ENV->set_isalive(G_DB_ENV, &bdberl_tpool_thread_is_alive);
+        DBG(" = %d\n", G_DB_ENV_ERROR);
+
+        // Open the DB Environment
         DBG("G_DB_ENV->open(%p, 0, %08X, 0)", &G_DB_ENV, flags);
         G_DB_ENV_ERROR = G_DB_ENV->open(G_DB_ENV, 0, flags, 0);
         DBG(" = %d\n", G_DB_ENV_ERROR);

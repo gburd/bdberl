@@ -25,11 +25,19 @@
  * THE SOFTWARE.
  *
  * ------------------------------------------------------------------- */
+
+#include <db.h>
+#include "bdberl_drv.h"
 #include "bdberl_tpool.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <signal.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 static void* bdberl_tpool_main(void* tpool);
 static TPoolJob* next_job(TPool* tpool);
@@ -355,4 +363,42 @@ void bdberl_tpool_job_count(TPool* tpool, unsigned int *pending_count_ptr,
     *pending_count_ptr = tpool->pending_job_count;
     *active_count_ptr = tpool->active_job_count;
     UNLOCK(tpool);
+}
+
+// Returns a unique identifier pair for the current thread of control
+void bdberl_tpool_thread_id(DB_ENV *env, pid_t *pid, db_threadid_t *tid)
+{
+    if (pid)
+        *pid = getpid();
+    if (tid)
+      *tid = (db_threadid_t)pthread_self();
+}
+
+char *bdberl_tpool_thread_id_string(DB_ENV *dbenv, pid_t pid, db_threadid_t tid, char *buf)
+{
+    snprintf(buf, DB_THREADID_STRLEN, "[pid:%08X/tid:%08X]", (unsigned int)pid, (unsigned int)tid);
+    return buf;
+}
+
+// Returns non-zero if the thread of control, identified by the pid and tid arguments,
+// is still running.
+// If DB_MUTEX_PROCESS_ONLY is set in flags then return only if the process (pid) is
+// alive, ignore the thread ID.
+int bdberl_tpool_thread_is_alive(DB_ENV *dbenv, pid_t pid, db_threadid_t tid, u_int32_t flags)
+{
+    static char path[200];
+    static struct stat sb;
+    int alive = 0;
+
+    snprintf(path, 200, "/dev/%d/status", pid);
+    if (stat(path, &sb))
+    {
+        if (flags & DB_MUTEX_PROCESS_ONLY)
+            alive = 1;
+        else
+            if (pthread_kill(tid, 0) != ESRCH)
+              alive = 1;
+    }
+    DBG("bdberl_tpool_thread_is_alive(%08X, %08X, %d) = %d\n", pid, tid, flags, alive);
+    return alive;
 }
