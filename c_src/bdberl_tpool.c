@@ -64,10 +64,13 @@ TPool* bdberl_tpool_start(unsigned int thread_count)
     int i;
     for (i = 0; i < thread_count; i++)
     {
-        // TODO: Figure out good way to deal with errors in this situation (should be rare, but still...)
-        erl_drv_thread_create("bdberl_tpool_thread", &(tpool->threads[i]), &bdberl_tpool_main, (void*)tpool, 0);
+        int rc = erl_drv_thread_create("bdberl_tpool_thread", &(tpool->threads[i]), &bdberl_tpool_main, (void*)tpool, 0);
+        if (0 != rc) {
+            // TODO: Figure out good way to deal with errors in this situation (should be rare, but still...)
+            fprintf(stderr, "Failed to spawn an erlang thread for the BDB thread pools! %s\n", erl_errno_id(rc));
+            fflush(stderr);
+        }
     }
-
     return tpool;
 }
 

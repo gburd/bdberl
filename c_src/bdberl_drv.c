@@ -321,8 +321,9 @@ DRIVER_INIT(bdberl_drv)
             // cleanup and set the environment to zero. Attempts to open ports will
             // fail and the user will have to sort out how to resolve the issue.
             DBG("G_DB_ENV->close(%p, 0);", &G_DB_ENV);
-            G_DB_ENV->close(G_DB_ENV, 0);
+            G_DB_ENV_ERROR = G_DB_ENV->close(G_DB_ENV, 0);
             G_DB_ENV = 0;
+            DBG(" = %d\n", G_DB_ENV_ERROR);
         }
     }
 
