@@ -33,11 +33,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include <signal.h>
 #include <errno.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <pthread.h>
 
 static void* bdberl_tpool_main(void* tpool);
 static TPoolJob* next_job(TPool* tpool);
@@ -390,12 +388,9 @@ char *bdberl_tpool_thread_id_string(DB_ENV *dbenv, pid_t pid, db_threadid_t tid,
 // alive, ignore the thread ID.
 int bdberl_tpool_thread_is_alive(DB_ENV *dbenv, pid_t pid, db_threadid_t tid, u_int32_t flags)
 {
-    static char path[200];
-    static struct stat sb;
     int alive = 0;
 
-    snprintf(path, 200, "/dev/%d/status", pid);
-    if (stat(path, &sb))
+    if (kill(pid, 0) != ESRCH)
     {
         if (flags & DB_MUTEX_PROCESS_ONLY)
             alive = 1;
