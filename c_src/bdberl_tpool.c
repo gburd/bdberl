@@ -378,7 +378,7 @@ void bdberl_tpool_thread_id(DB_ENV *env, pid_t *pid, db_threadid_t *tid)
 
 char *bdberl_tpool_thread_id_string(DB_ENV *dbenv, pid_t pid, db_threadid_t tid, char *buf)
 {
-    snprintf(buf, DB_THREADID_STRLEN, "[pid:%08X/tid:%08X]", (unsigned int)pid, (unsigned int)tid);
+    snprintf(buf, DB_THREADID_STRLEN, "%d/%p", pid, tid);
     return buf;
 }
 
