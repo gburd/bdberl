@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------
  *
- * bdberl: Thread Pool 
+ * bdberl: Thread Pool
  * Copyright (c) 2008-9 The Hive http://www.thehive.com/
  * Authors: Dave "dizzyd" Smith <dizzyd@dizzyd.com>
  *          Phil Toland <phil.toland@gmail.com>
@@ -74,7 +74,7 @@ typedef struct
     unsigned int active_threads;
 
     unsigned int shutdown;
-    
+
 } TPool;
 
 TPool* bdberl_tpool_start(unsigned int thread_count);
@@ -86,7 +86,13 @@ void bdberl_tpool_run(TPool* tpool, TPoolJobFunc main_fn, void* arg, TPoolJobFun
 
 void bdberl_tpool_cancel(TPool* tpool, TPoolJob* job);
 
-void bdberl_tpool_job_count(TPool* tpool, unsigned int *pending_count_ptr, 
+void bdberl_tpool_job_count(TPool* tpool, unsigned int *pending_count_ptr,
                             unsigned int *active_count_ptr);
+
+void bdberl_tpool_thread_id(DB_ENV *env, pid_t *pid, db_threadid_t *tid);
+
+char *bdberl_tpool_thread_id_string(DB_ENV *dbenv, pid_t pid, db_threadid_t tid, char *buf);
+
+int bdberl_tpool_thread_is_alive(DB_ENV *dbenv, pid_t pid, db_threadid_t tid, u_int32_t flags);
 
 #endif

@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------
  *
- * bdberl: Thread Pool 
+ * bdberl: Thread Pool
  * Copyright (c) 2008-9 The Hive http://www.thehive.com/
  * Authors: Dave "dizzyd" Smith <dizzyd@dizzyd.com>
  *          Phil Toland <phil.toland@gmail.com>
@@ -78,7 +78,7 @@ void bdberl_tpool_stop(TPool* tpool)
     {
         erl_drv_cond_wait(tpool->work_cv, tpool->lock);
     }
-    
+
     // Join up with all the workers
     int i = 0;
     for (i = 0; i < tpool->thread_count; i++)
@@ -86,7 +86,7 @@ void bdberl_tpool_stop(TPool* tpool)
         erl_drv_thread_join(tpool->threads[i], 0);
     }
 
-    // Cleanup 
+    // Cleanup
     erl_drv_cond_destroy(tpool->work_cv);
     erl_drv_cond_destroy(tpool->cancel_cv);
     driver_free(tpool->threads);
@@ -95,7 +95,7 @@ void bdberl_tpool_stop(TPool* tpool)
     driver_free(tpool);
 }
 
-void bdberl_tpool_run(TPool* tpool, TPoolJobFunc main_fn, void* arg, TPoolJobFunc cancel_fn, 
+void bdberl_tpool_run(TPool* tpool, TPoolJobFunc main_fn, void* arg, TPoolJobFunc cancel_fn,
                       TPoolJob** job_ptr)
 {
     // Allocate and fill a new job structure
@@ -107,7 +107,7 @@ void bdberl_tpool_run(TPool* tpool, TPoolJobFunc main_fn, void* arg, TPoolJobFun
 
     // Sync up with the tpool and add the job to the pending queue
     LOCK(tpool);
-    
+
     if (tpool->pending_jobs)
     {
         // Make sure the current last job points to this one next
@@ -122,7 +122,7 @@ void bdberl_tpool_run(TPool* tpool, TPoolJobFunc main_fn, void* arg, TPoolJobFun
     tpool->last_pending_job = job;
     tpool->pending_job_count++;
 
-    // Generate a notification that there is work todo. 
+    // Generate a notification that there is work todo.
     // TODO: I think this may not be necessary, in the case where there are already other
     // pending jobs. Not sure ATM, however, so will be on safe side
     erl_drv_cond_broadcast(tpool->work_cv);
@@ -133,7 +133,7 @@ void bdberl_tpool_cancel(TPool* tpool, TPoolJob* job)
 {
     LOCK(tpool);
 
-    // Remove the job from the pending queue 
+    // Remove the job from the pending queue
     if (remove_pending_job(tpool, job))
     {
         // Job was removed from pending -- unlock and notify the job that it got canceled
@@ -149,7 +149,7 @@ void bdberl_tpool_cancel(TPool* tpool, TPoolJob* job)
         return;
     }
 
-    // Job not in the pending queue -- check the active queue. 
+    // Job not in the pending queue -- check the active queue.
     if (is_active_job(tpool, job))
     {
         // Job is currently active -- mark it as cancelled (so we get notified) and wait for it
@@ -159,7 +159,7 @@ void bdberl_tpool_cancel(TPool* tpool, TPoolJob* job)
             erl_drv_cond_wait(tpool->cancel_cv, tpool->lock);
         }
 
-        // Job is no longer running and should now be considered dead. Cleanup is handled by 
+        // Job is no longer running and should now be considered dead. Cleanup is handled by
         // the worker.
         UNLOCK(tpool);
         return;
@@ -212,7 +212,7 @@ static void* bdberl_tpool_main(void* arg)
             {
                 erl_drv_cond_broadcast(tpool->cancel_cv);
             }
-        
+
             // Cleanup the job (remove from active list, free, etc.)
             cleanup_job(tpool, job);
         }
@@ -318,7 +318,7 @@ static void cleanup_job(TPool* tpool, TPoolJob* job)
             {
                 tpool->active_jobs = current->next;
             }
-            
+
             break;
         }
 
@@ -348,7 +348,7 @@ static int is_active_job(TPool* tpool, TPoolJob* job)
 }
 
 // Return the number of pending and active jobs
-void bdberl_tpool_job_count(TPool* tpool, unsigned int *pending_count_ptr, 
+void bdberl_tpool_job_count(TPool* tpool, unsigned int *pending_count_ptr,
                              unsigned int *active_count_ptr)
 {
     LOCK(tpool);
