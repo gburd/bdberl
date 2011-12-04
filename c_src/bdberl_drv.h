@@ -250,4 +250,21 @@ void bdberl_txn_tpool_run(TPoolJobFunc main_fn,  PortData* d, TPoolJobFunc cance
         RETURN_INT(0, outbuf);                                  \
     }}
 
+
+/**
+ * Helpful macros
+ */
+#ifdef DEBUG
+#  define DBG(...) bdberl_dbg(__VA_ARGS__)
+#  define DBGCMD(P, ...)   bdberl_dbgcmd(P, __VA_ARGS__)
+#  define DBGCMDRC(P, ...) bdberl_dbgcmdrc(P, __VA_ARGS__)
+extern void bdberl_dbg(const char * fmt, ...);
+extern void bdberl_dbgcmd(PortData *d, const char *fmt, ...);
+extern void bdberl_dbgcmdrc(PortData *d, int rc);
+#else
+#  define DBG(arg1,...)
+#  define DBGCMD(d, fmt, ...)
+#  define DBGCMDRC(d, rc) { while (0) { rc++; } }  // otherwise get unused variable error
+#endif
+
 #endif //_BDBERL_DRV

@@ -229,23 +229,6 @@ static TPool* G_TPOOL_GENERAL = NULL;
 static TPool* G_TPOOL_TXNS    = NULL;
 
 
-/**
- * Helpful macros
- */
-#ifdef DEBUG
-#  define DBG(...) bdberl_dbg(__VA_ARGS__)
-#  define DBGCMD(P, ...)   bdberl_dbgcmd(P, __VA_ARGS__)
-#  define DBGCMDRC(P, ...) bdberl_dbgcmdrc(P, __VA_ARGS__)
-static void bdberl_dbg(const char * fmt, ...);
-static void bdberl_dbgcmd(PortData *d, const char *fmt, ...);
-static void bdberl_dbgcmdrc(PortData *d, int rc);
-#else
-#  define DBG(arg1,...)
-#  define DBGCMD(d, fmt, ...)
-#  define DBGCMDRC(d, rc) { while (0) { rc++; } }  // otherwise get unused variable error
-#endif
-
-
 #define LOCK_DATABASES(P)                                               \
     do                                                                  \
     {                                                                   \
@@ -2494,7 +2477,7 @@ static void send_log_message(ErlDrvTermData* msg, int elements)
 }
 
 #ifdef DEBUG
-static void bdberl_dbg(const char *fmt, ...)
+void bdberl_dbg(const char *fmt, ...)
 {
     char buf[1024];
 
@@ -2503,11 +2486,11 @@ static void bdberl_dbg(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    (void)fprintf(stderr, "%s\n", buf);
+    (void)fprintf(stderr, "%s", buf);
     (void)fflush(stderr);
 }
 
-static void bdberl_dbgcmd(PortData *d, const char *fmt, ...)
+void bdberl_dbgcmd(PortData *d, const char *fmt, ...)
 {
     char buf[1024];
 
@@ -2516,11 +2499,11 @@ static void bdberl_dbgcmd(PortData *d, const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
 
-    (void)fprintf(stderr, "threadid %p port %p: %s\n", erl_drv_thread_self(), d->port, buf);
+    (void)fprintf(stderr, "threadid %p port %p: %s", erl_drv_thread_self(), d->port, buf);
     (void)fflush(stderr);
 }
 
-static void bdberl_dbgcmdrc(PortData *d, int rc)
+void bdberl_dbgcmdrc(PortData *d, int rc)
 {
     (void)fprintf(stderr, "threadid %p port %p: rc = %s (%d)\n",
                   erl_drv_thread_self(), d->port, rc == 0 ? "ok" : bdberl_rc_to_atom_str(rc), rc);
