@@ -45,8 +45,9 @@ static int remove_pending_job(TPool* tpool, TPoolJob* job);
 static void cleanup_job(TPool* tpool, TPoolJob* job);
 static int is_active_job(TPool* tpool, TPoolJob* job);
 
-#define LOCK(t) erl_drv_mutex_lock(tpool->lock)
-#define UNLOCK(t) erl_drv_mutex_unlock(tpool->lock)
+#define LOCK(tpool) erl_drv_mutex_lock(tpool->lock)
+#define UNLOCK(tpool) erl_drv_mutex_unlock(tpool->lock)
+
 
 TPool* bdberl_tpool_start(unsigned int thread_count)
 {
