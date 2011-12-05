@@ -105,7 +105,7 @@
 %% @spec open(Name, Type) -> {ok, Db} | {error, Error}
 %% where
 %%    Name = string()
-%%    Type = btree | hash
+%%    Type = btree | hash | queue
 %%    Db = integer()
 %%
 %% @equiv open(Name, Type, [create])
@@ -273,7 +273,7 @@ close(Db, Opts) ->
 -spec txn_begin() -> ok | db_error().
 
 txn_begin() ->
-    txn_begin([txn_snapshot]).
+    txn_begin([]).
 
 
 %%--------------------------------------------------------------------
@@ -596,7 +596,7 @@ transaction(Fun, Retries, TimeLeft, Opts) ->
                     transaction(Fun, R, T, Opts);
 
                 _ : Reason ->
-                    lager:info("function threw non-lock error - ~p", [Reason]),
+                    lager:info("function threw non-lock error - ~p", [{Reason, erlang:get_stacktrace()}]),
                     ok = txn_abort(),
                     {error, {transaction_failed, Reason}}
             end;
@@ -834,7 +834,7 @@ put_commit_r(Db, Key, Value, Opts) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec get(Db :: db(), Key :: db_key()) ->
-    not_found | {ok, db_ret_value()} | db_error().
+    not_found | {ok, db_ret_value()} | {error, db_error()}.
 
 get(Db, Key) ->
     get(Db, Key, []).
@@ -885,7 +885,7 @@ get(Db, Key) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec get(Db :: db(), Key :: db_key(), Opts :: db_flags()) ->
-    not_found | {ok, db_ret_value()} | db_error().
+    not_found | {ok, db_ret_value()} | {error, db_error()}.
 
 get(Db, Key, Opts) ->
     {KeyLen, KeyBin} = to_binary(Key),
@@ -962,8 +962,6 @@ get_r(Db, Key, Opts) ->
         not_found   -> not_found;
         Error       -> throw(Error)
     end.
-
-
 
 
 %%--------------------------------------------------------------------
